@@ -8,7 +8,8 @@
 		"serve": "vite preview",
 		"start": "node server.js",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
-		"prebuild": "node scripts/stage-proxy-assets.mjs"
+		"prebuild": "node scripts/stage-proxy-assets.mjs",
+		"wisp": "node wisp-server.js"
 	},
 	"devDependencies": {
 		"@iconify-json/gg": "^1.2.1",
