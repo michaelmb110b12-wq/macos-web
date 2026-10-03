@@ -5,6 +5,8 @@
 	import { preferences } from '🍎/state/preferences.svelte.ts';
 	import { spring } from '🍎/state/spring.svelte.ts';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	const { app_id }: { app_id: AppID } = $props();
 
 	const motion_val = spring(0, { damping: 0.28, stiffness: 0.1 });
@@ -27,7 +29,7 @@
 	<section class="main-area">
 		<img
 			style:transform={image_transform}
-			src="/app-icons/{app_id}/256.webp"
+			src={assetBase + 'app-icons/' + app_id + '/256.webp'}
 			alt="Placeholder App"
 		/>
 
@@ -36,7 +38,7 @@
 		<h1 style:display="flex" style:align-items="center" style:gap="0.5rem">
 			Nothing here yet <img
 				style="height: 1em; width: auto; transform: translateY(0.1em);"
-				src="/emojis/wink.png"
+				src={assetBase + 'emojis/wink.png'}
 				alt="Wink Emoji"
 			/>
 		</h1>
