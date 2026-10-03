@@ -28,7 +28,6 @@
 
 	let is_maximized = $state(false);
 	let minimized_transform = $state<string>();
-	let was_maximized = false;
 
 	let windowEl = $state<HTMLElement>();
 
@@ -76,26 +75,32 @@
 
 		if (!preferences.reduced_motion) {
 			windowEl.style.transition =
-				'left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease, transform 0.25s ease';
+				'left 0.25s ease, top 0.25s ease, right 0.25s ease, bottom 0.25s ease, width 0.25s ease, height 0.25s ease, transform 0.25s ease';
 		}
 
 		if (!is_maximized) {
-			minimized_transform = windowEl.style.transform || 'translate(0px, 0px)';
+			minimized_transform = windowEl.style.transform || 'none';
 			dragging_enabled = false;
 
 			windowEl.classList.add('maximized');
 			windowEl.style.left = '0';
 			windowEl.style.top = '0';
-			windowEl.style.transform = 'none';
+			windowEl.style.right = '0';
+			windowEl.style.bottom = '0';
 			windowEl.style.width = '100%';
 			windowEl.style.height = '100%';
+			windowEl.style.transform = 'none';
 		} else {
 			dragging_enabled = true;
 
 			windowEl.classList.remove('maximized');
-			windowEl.style.transform = minimized_transform || 'translate(0px, 0px)';
+			windowEl.style.left = '';
+			windowEl.style.top = '';
+			windowEl.style.right = '';
+			windowEl.style.bottom = '';
 			windowEl.style.width = `${+width / remModifier}rem`;
 			windowEl.style.height = `${+height / remModifier}rem`;
+			windowEl.style.transform = minimized_transform || 'none';
 		}
 
 		is_maximized = !is_maximized;
@@ -170,7 +175,7 @@
 
 		position: absolute;
 
-		will-change: width, height;
+		will-change: left, top, width, height, transform;
 
 		border-radius: 0.75rem;
 		box-shadow: var(--elevated-shadow);
@@ -178,8 +183,11 @@
 		cursor: var(--system-cursor-default), auto;
 
 		&.maximized {
+			inset: 0 !important;
 			left: 0 !important;
 			top: 0 !important;
+			right: 0 !important;
+			bottom: 0 !important;
 			transform: none !important;
 			width: 100% !important;
 			height: 100% !important;
