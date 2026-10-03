@@ -143,14 +143,30 @@
 		{title}
 	</p>
 
-	<span style:transform="translate(0, {$appOpenIconBounceTransform}px)">
-		<img
-			bind:this={image_el}
-			src="/app-icons/{app_id}/256.webp"
-			alt="{title} app"
-			style:width="{$width_px / 16}rem"
-			draggable="false"
-		/>
+	<span style:transform="translate(0, {$appOpenIconBounceTransform}px)" class="icon-slot">
+		{#if app_id === 'games'}
+			<svg
+				class="games-icon"
+				viewBox="0 0 256 256"
+				role="img"
+				aria-label="Games app"
+				style:width="{$width_px / 16}rem"
+			>
+				<rect x="8" y="8" width="240" height="240" rx="54" fill="#ff3b30"/>
+				<path d="M139 47c-30 2-57 25-64 58-6 28 4 50 20 66l-16 33c-3 7 4 14 11 10l31-18c12 4 25 6 38 3 28-7 47-34 47-63 0-38-30-69-67-69z" fill="#fff"/>
+				<path d="M125 88c4-10 12-18 22-23 3-2 7 1 6 5-2 8-6 15-12 20l-16 13-6-6z" fill="#ff3b30"/>
+				<circle cx="175" cy="101" r="6" fill="#ff3b30"/>
+				<path d="M105 126l-20 8 20 8 8 20 8-20 20-8-20-8-8-20z" fill="#ff3b30"/>
+			</svg>
+		{:else}
+			<img
+				bind:this={image_el}
+				src="/app-icons/{app_id}/256.webp"
+				alt="{title} app"
+				style:width="{$width_px / 16}rem"
+				draggable="false"
+			/>
+		{/if}
 	</span>
 
 	<div class="dot" style:--opacity={+apps.open[app_id]}></div>
