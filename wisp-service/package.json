@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "wisp-js-server --host 0.0.0.0 --port $PORT --logging NONE --config wisp-config.json",
-    "wisp": "wisp-js-server --host 0.0.0.0 --port $PORT --logging NONE --config wisp-config.json"
+    "start": "node server.js",
+    "wisp": "node server.js"
   },
   "dependencies": {
     "@mercuryworkshop/wisp-js": "0.4.1"
