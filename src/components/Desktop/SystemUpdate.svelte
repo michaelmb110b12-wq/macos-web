@@ -4,6 +4,8 @@
 	import { system_needs_update } from '🍎/state/system.svelte';
 	import SystemDialog from '../SystemUI/SystemDialog.svelte';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	let system_update_dialog = $state<SystemDialog>();
 
 	// replaced dynamically
@@ -51,7 +53,7 @@
 		<img
 			width="128"
 			height="128"
-			src="/app-icons/system-preferences/256.webp"
+			src={assetBase + 'app-icons/system-preferences/256.webp'}
 			alt="AppStore app"
 			draggable="false"
 		/>
