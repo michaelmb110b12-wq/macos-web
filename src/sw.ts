@@ -1,19 +1,33 @@
 /// <reference lib="webworker" />
-import { Serwist, type PrecacheEntry } from 'serwist';
 
-declare const self: ServiceWorkerGlobalScope & {
-	__WB_MANIFEST: (PrecacheEntry | string)[];
-};
+// The root service worker doubles as the site's PWA worker and Scramjet's
+// network interception worker. Keeping it at the site root is important:
+// GitHub Pages uses /macos-web/ while Bunny serves the same files at /.
+// Relative loading makes the same worker work on both hosts.
 
-const serwist = new Serwist({
-	precacheEntries: self.__WB_MANIFEST,
-	skipWaiting: false,
-	clientsClaim: true,
-	navigationPreload: true,
+importScripts("./scram/scramjet.all.js");
+
+const { ScramjetServiceWorker } = $scramjetLoadWorker();
+const scramjet = new ScramjetServiceWorker();
+
+self.addEventListener("install", () => {
+	self.skipWaiting();
 });
 
-self.addEventListener('message', (event) => {
-	if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+self.addEventListener("activate", (event) => {
+	event.waitUntil(self.clients.claim());
 });
 
-serwist.addEventListeners();
+async function handleRequest(event: FetchEvent) {
+	await scramjet.loadConfig();
+
+	if (scramjet.route(event)) {
+		return scramjet.fetch(event);
+	}
+
+	return fetch(event.request);
+}
+
+self.addEventListener("fetch", (event: FetchEvent) => {
+	event.respondWith(handleRequest(event));
+});
