@@ -5,6 +5,7 @@ import { hostname } from 'node:os';
 
 import { server as wisp, logging } from '@mercuryworkshop/wisp-js/server';
 import { scramjetPath } from '@mercuryworkshop/scramjet/path';
+import { libcurlPath } from '@mercuryworkshop/libcurl-transport';
 import { epoxyPath } from '@mercuryworkshop/epoxy-transport';
 import { baremuxPath } from '@mercuryworkshop/bare-mux/node';
 
@@ -44,6 +45,12 @@ await fastify.register(fastifyStatic, {
 await fastify.register(fastifyStatic, {
 	root: scramjetPath,
 	prefix: '/scram/',
+	decorateReply: false,
+});
+
+await fastify.register(fastifyStatic, {
+	root: libcurlPath,
+	prefix: '/libcurl/',
 	decorateReply: false,
 });
 
