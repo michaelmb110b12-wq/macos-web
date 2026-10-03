@@ -14,9 +14,13 @@
 	{#await import('./Calendar/Calendar.svelte') then { default: Calendar }}
 		<Calendar />
 	{/await}
-{:else if app_id === 'vscode'}
-	{#await import('./VSCode/VSCode.svelte') then { default: VSCode }}
-		<VSCode {is_being_dragged} />
+{:else if app_id === 'games'}
+	{#await import('./Games/Games.svelte') then { default: Games }}
+		<Games />
+	{/await}
+{:else if app_id === 'safari'}
+	{#await import('./Safari/Safari.svelte') then { default: Safari }}
+		<Safari {is_being_dragged} />
 	{/await}
 {:else if app_id === 'calculator'}
 	{#await import('./Calculator/Calculator.svelte') then { default: Calculator }}
@@ -25,10 +29,6 @@
 {:else if app_id === 'wallpapers'}
 	{#await import('./WallpaperApp/WallpaperSelectorApp.svelte') then { default: WallpaperSelector }}
 		<WallpaperSelector />
-	{/await}
-{:else if app_id === 'purus-twitter'}
-	{#await import('./PurusProfile/PurusProfile.svelte') then { default: PurusProfile }}
-		<PurusProfile />
 	{/await}
 {:else}
 	{#await import('./AppStore/AppStore.svelte') then { default: AppStore }}
