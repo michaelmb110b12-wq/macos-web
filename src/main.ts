@@ -7,8 +7,10 @@ const desktop = mount(Desktop, {
 	target: document.getElementById('root'),
 });
 
-registerSW({
-	immediate: true,
-});
+if (!/\\.b-cdn\\.net$/i.test(location.hostname)) {
+	registerSW({
+		immediate: true,
+	});
+}
 
 export default desktop;
