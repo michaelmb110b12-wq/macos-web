@@ -28,6 +28,7 @@
 
 	let is_maximized = $state(false);
 	let minimized_transform = $state<string>();
+	let was_maximized = false;
 
 	let windowEl = $state<HTMLElement>();
 
