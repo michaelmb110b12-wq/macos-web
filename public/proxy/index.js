@@ -40,15 +40,18 @@ async function registerProxyServiceWorker() {
 		throw new Error("Your browser does not support service workers.");
 	}
 
-	const registration = await navigator.serviceWorker.register("./sw.js", {
-		scope: "./",
+	const serviceWorkerUrl = new URL("scramjet/sw.js", SITE_ROOT).href;
+	const serviceWorkerScope = new URL("scramjet/", SITE_ROOT).pathname;
+
+	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
+		scope: serviceWorkerScope,
 		updateViaCache: "none",
 	});
 
 	await registration.update();
 	await navigator.serviceWorker.ready;
 
-	const expectedController = new URL("./sw.js", location.href).href;
+	const expectedController = new URL("scramjet/sw.js", SITE_ROOT).href;
 	const currentController =
 		navigator.serviceWorker.controller?.scriptURL || "";
 
@@ -107,7 +110,7 @@ async function createScramjetController() {
 	const controller = new ScramjetController({
 		// Keep Scramjet's rewritten URLs inside /proxy/ so the scoped
 		// /proxy/sw.js service worker can intercept them on GitHub Pages.
-		prefix: new URL("proxy/scramjet/", SITE_ROOT).pathname,
+		prefix: new URL("scramjet/", SITE_ROOT).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
