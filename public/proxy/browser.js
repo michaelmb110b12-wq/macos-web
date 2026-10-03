@@ -4,7 +4,7 @@ await scramjet.init();
 const connection=new BareMux.BareMuxConnection('/baremux/worker.js');
 const wispUrl=(location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/wisp/';
 await connection.setTransport('/epoxy/index.mjs',[{wisp:wispUrl}]);
-await navigator.serviceWorker.register('/proxy/sw.js',{scope:'/proxy/',updateViaCache:'none'});
+await navigator.serviceWorker.ready;
 await navigator.serviceWorker.ready;
 const frame=scramjet.createFrame();
 document.body.appendChild(frame.frame);
