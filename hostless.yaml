@@ -1,0 +1,18 @@
+build:
+  system: docker
+  command: ""
+  min_cpu: 0.5
+  max_cpu: 1
+  min_memory: 256
+  max_memory: 1024
+
+dockerfile_path: "./Dockerfile"
+working_directory: "/"
+build_context_directory: "/"
+
+start_command: "npm start"
+
+health_check:
+  type: http
+  http_path: "/health"
+  interval_in_seconds: 30
