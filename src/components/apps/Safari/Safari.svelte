@@ -7,10 +7,11 @@
 		id: number;
 		title: string;
 		url: string;
+		srcUrl: string;
 	};
 
 	let tabs = $state<Tab[]>([
-		{ id: 1, title: 'New Tab', url: 'about:blank' },
+		{ id: 1, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' },
 	]);
 	let activeTabId = $state(1);
 	let nextTabId = 2;
@@ -49,7 +50,12 @@
 		const tab = activeTab();
 		if (tab) {
 			tab.url = target;
-			tab.title = new URL(target).hostname || 'New Tab';
+			tab.srcUrl = target;
+			try {
+				tab.title = new URL(target).hostname || 'New Tab';
+			} catch {
+				tab.title = 'New Tab';
+			}
 		}
 
 		sendToTab('navigate', target);
@@ -69,7 +75,7 @@
 		const id = nextTabId++;
 		tabs = [
 			...tabs,
-			{ id, title: 'New Tab', url: 'about:blank' },
+			{ id, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' },
 		];
 		activeTabId = id;
 		address = 'about:blank';
@@ -77,7 +83,7 @@
 
 	function closeTab(id: number) {
 		if (tabs.length === 1) {
-			tabs = [{ id: 1, title: 'New Tab', url: 'about:blank' }];
+			tabs = [{ id: 1, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' }];
 			activeTabId = 1;
 			nextTabId = Math.max(nextTabId, 2);
 			return;
@@ -93,21 +99,31 @@
 		}
 	}
 
-	function handleGamesNavigation(event: Event) {
-		const url = (event as CustomEvent<string>).detail;
-		if (typeof url !== 'string' || !url.trim()) return;
-		address = url;
+	$effect(() => {
+		const pending = apps.pending_navigation;
+		if (!pending || !apps.open.safari || apps.active !== 'safari') return;
+
+		const target = normalizeUrl(pending);
+		if (!target) {
+			apps.pending_navigation = null;
+			return;
+		}
+
 		const tab = activeTab();
 		if (tab) {
-			tab.url = url;
+			tab.url = target;
+			tab.srcUrl = target;
 			try {
-				tab.title = new URL(url).hostname || 'New Tab';
+				tab.title = new URL(target).hostname || 'New Tab';
 			} catch {
 				tab.title = 'New Tab';
 			}
 		}
-		sendToTab('navigate', url);
-	}
+
+		address = target;
+		apps.pending_navigation = null;
+	});
+
 
 	function handleMessage(event: MessageEvent) {
 		if (event.origin !== location.origin) return;
@@ -193,7 +209,7 @@
 	<div class="browser-host">
 		{#each tabs as tab}
 			<iframe
-				src={`/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.url)}`}
+				src={`/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`}
 				data-proxy-tab={tab.id}
 				title={tab.title}
 				class:hidden={tab.id !== activeTabId}
