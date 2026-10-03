@@ -41,24 +41,14 @@ function getWispUrl() {
 }
 
 async function registerProxyServiceWorker() {
+	// The site-root service worker handles both the macOS app and Scramjet.
+	// Do not install a second worker under /proxy/; that caused stale
+	// configurations to intercept /proxy/index.html itself.
 	if (!navigator.serviceWorker) {
 		throw new Error("Your browser does not support service workers.");
 	}
-
-	const serviceWorkerUrl = new URL("sw.js", location.href).href;
-	const serviceWorkerScope = new URL("./", location.href).pathname;
-
-	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
-		scope: serviceWorkerScope,
-		updateViaCache: "none",
-	});
-
-	await registration.update();
-
-	// The proxy page may still be controlled by the site's root PWA worker.
-	// That is fine: the /proxy/ worker will take over requests for the
-	// rewritten URLs because it has the more-specific /proxy/ scope.
-	return registration;
+	await navigator.serviceWorker.ready;
+	return true;
 }
 
 async function configureTransport() {
@@ -87,7 +77,7 @@ async function createScramjetController() {
 	const controller = new ScramjetController({
 		// The proxy worker is scoped to /proxy/, so keep Scramjet's
 		// rewritten URLs in that exact scope.
-		prefix: new URL("./scramjet/", location.href).pathname,
+		prefix: new URL("scramjet/", SITE_ROOT).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
