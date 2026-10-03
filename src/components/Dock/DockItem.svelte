@@ -32,6 +32,8 @@
 	import { apps, type AppID } from '🍎/state/apps.svelte.ts';
 	import { preferences } from '🍎/state/preferences.svelte.ts';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	const {
 		mouse_x,
 		app_id,
@@ -161,7 +163,7 @@
 		{:else}
 			<img
 				bind:this={image_el}
-				src="/app-icons/{app_id}/256.webp"
+				src={assetBase + 'app-icons/' + app_id + '/256.webp'}
 				alt="{title} app"
 				style:width="{$width_px / 16}rem"
 				draggable="false"
