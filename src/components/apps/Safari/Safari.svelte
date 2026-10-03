@@ -10,11 +10,11 @@
 	};
 
 	let tabs = $state<Tab[]>([
-		{ id: 1, title: 'New Tab', url: 'https://example.com' },
+		{ id: 1, title: 'New Tab', url: 'about:blank' },
 	]);
 	let activeTabId = $state(1);
 	let nextTabId = 2;
-	let address = $state('https://example.com');
+	let address = $state('about:blank');
 
 	function activeTab() {
 		return tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
@@ -62,22 +62,22 @@
 	function selectTab(id: number) {
 		activeTabId = id;
 		const tab = activeTab();
-		address = tab?.url ?? 'https://example.com';
+		address = tab?.url ?? 'about:blank';
 	}
 
 	function addTab() {
 		const id = nextTabId++;
 		tabs = [
 			...tabs,
-			{ id, title: 'New Tab', url: 'https://example.com' },
+			{ id, title: 'New Tab', url: 'about:blank' },
 		];
 		activeTabId = id;
-		address = 'https://example.com';
+		address = 'about:blank';
 	}
 
 	function closeTab(id: number) {
 		if (tabs.length === 1) {
-			tabs = [{ id: 1, title: 'New Tab', url: 'https://example.com' }];
+			tabs = [{ id: 1, title: 'New Tab', url: 'about:blank' }];
 			activeTabId = 1;
 			nextTabId = Math.max(nextTabId, 2);
 			return;
