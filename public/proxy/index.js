@@ -73,6 +73,39 @@ function deleteCookieDatabase() {
 	});
 }
 
+async function ensureScramjetDatabase() {
+	if (!("indexedDB" in window)) return;
+
+	const stateExists = await new Promise((resolve, reject) => {
+		const request = indexedDB.open(COOKIE_DB);
+
+		request.onupgradeneeded = () => {
+			const db = request.result;
+
+			// A fresh Scramjet database starts at version 1 with the "state" store.
+			if (!db.objectStoreNames.contains(COOKIE_STORE)) {
+				db.createObjectStore(COOKIE_STORE);
+			}
+		};
+
+		request.onerror = () =>
+			reject(request.error || new Error("Could not open Scramjet storage."));
+
+		request.onsuccess = () => {
+			const db = request.result;
+			const exists = db.objectStoreNames.contains(COOKIE_STORE);
+			db.close();
+			resolve(exists);
+		};
+	});
+
+	if (stateExists) return;
+
+	// An older build can leave version 1 without the expected object store.
+	// Repair it before ScramjetController opens the database.
+	await deleteCookieDatabase();
+}
+
 async function createController() {
 	const { ScramjetController } = $scramjetLoadController();
 
@@ -137,6 +170,7 @@ async function configureTransport() {
 async function start() {
 	try {
 		await registerAndTakeControl();
+		await ensureScramjetDatabase();
 
 		const scramjet = await createController();
 
