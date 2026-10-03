@@ -75,11 +75,20 @@ async function registerProxyServiceWorker() {
 
 	return true;
 }
-const DEFAULT_WISP_URL = "wss://wisp-scramjet-mac.hostless.app/wisp/";
+const DEFAULT_WISP_URL = "wss://anura.pro/";
 
 function getWispUrl() {
-	const configured = localStorage.getItem("wispUrl");
-	return configured || DEFAULT_WISP_URL;
+	const configured = (localStorage.getItem("wispUrl") || "").trim();
+
+	// The old Hostless endpoint is currently unavailable. Do not keep using a
+	// stale saved endpoint; the static Scramjet reference uses Anura's Wisp
+	// endpoint and its docs expose it as a Wisp-compatible backend.
+	if (!configured || /hostless\.app/i.test(configured)) {
+		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
+		return DEFAULT_WISP_URL;
+	}
+
+	return configured;
 }
 
 async function configureTransport() {
