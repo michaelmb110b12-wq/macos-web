@@ -4,7 +4,9 @@
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
-	const siteBase = new URL(import.meta.env.BASE_URL, location.origin);
+	// Resolve the app root from the actual page URL so both GitHub Pages
+	// (/macos-web/) and Bunny/custom-domain roots (/) work with base: './'.
+	const siteBase = new URL('./', location.href);
 	const proxyEntry = new URL('proxy/index.html', siteBase).href;
 	const browserHome = new URL('blueberry_mac_os_banner.html', siteBase).href;
 
