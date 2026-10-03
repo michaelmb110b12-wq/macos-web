@@ -1,10 +1,6 @@
 build:
   system: docker
   command: ""
-  min_cpu: 0.5
-  max_cpu: 1
-  min_memory: 256
-  max_memory: 1024
 
 dockerfile_path: "./Dockerfile"
 working_directory: "/"
