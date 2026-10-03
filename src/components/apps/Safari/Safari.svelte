@@ -4,6 +4,8 @@
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
+	const proxyEntry = new URL('proxy/index.html', new URL(import.meta.env.BASE_URL, location.origin)).href;
+
 	type Tab = {
 		id: number;
 		title: string;
