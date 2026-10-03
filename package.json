@@ -45,7 +45,7 @@
 		"@mercuryworkshop/libcurl-transport": "^1.5.2",
 		"ws": "^8.18.3"
 	},
-	"packageManager": "npm@10.9.2",
+	"packageManager": "pnpm@10.11.1",
 	"engines": {
 		"node": ">=20"
 	}
