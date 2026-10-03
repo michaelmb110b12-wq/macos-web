@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { apps } from '🍎/state/apps.svelte.ts';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	const cloudUrl = 'https://figure-cloud-cine.b-cdn.net/';
-	const gnMathUrl = 'https://michaelmb110b12-wq.github.io/macos-web/gnmath/index.html';
+	const gnMathUrl = new URL('gnmath/index.html', new URL(assetBase, location.origin)).href;
 
 	function openInSafari(url: string) {
 		apps.pending_navigation = new URL(url, location.origin).href;
@@ -16,7 +18,7 @@
 	<div class="buttons">
 		<button onclick={() => openInSafari(cloudUrl)}>Open Cloud</button>
 		<button class="game-button" onclick={() => openInSafari(gnMathUrl)}>
-			<img class="game-icon" src="/app-icons/gnmath.svg" alt="GN Math" />
+			<img class="game-icon" src={assetBase + 'app-icons/gnmath.svg'} alt="GN Math" />
 			<span>Open GN Math</span>
 		</button>
 	</div>
