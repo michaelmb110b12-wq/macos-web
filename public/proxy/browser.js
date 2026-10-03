@@ -110,25 +110,26 @@ async function registerProxyServiceWorker() {
 	await registration.update();
 	await navigator.serviceWorker.ready;
 
-	// clientsClaim() in proxy/sw.js normally controls this page immediately.
-	// Do not fail just because controller attachment is one event behind.
-	if (!navigator.serviceWorker.controller) {
-		await new Promise((resolve) => {
-			const timeout = setTimeout(resolve, 2000);
+	const expectedController = new URL("./sw.js", location.href).href;
+	const currentController =
+		navigator.serviceWorker.controller?.scriptURL || "";
 
-			const onChange = () => {
-				clearTimeout(timeout);
-				navigator.serviceWorker.removeEventListener("controllerchange", onChange);
-				resolve();
-			};
-
-			navigator.serviceWorker.addEventListener("controllerchange", onChange, {
-				once: true,
-			});
-		});
+	if (currentController === expectedController) {
+		sessionStorage.removeItem("__macos_proxy_scope_reload");
+		return true;
 	}
 
-	return registration;
+	// A previous root PWA worker can still control the document. One reload
+	// lets the newly-active /proxy/ worker become the controller.
+	if (sessionStorage.getItem("__macos_proxy_scope_reload") !== "1") {
+		sessionStorage.setItem("__macos_proxy_scope_reload", "1");
+		location.reload();
+		return false;
+	}
+
+	throw new Error(
+		"The /proxy/ service worker is installed but this tab is still controlled by another worker.",
+	);
 }
 
 function getWispUrl() {
@@ -181,7 +182,8 @@ async function createScramjetController() {
 
 async function start() {
 	try {
-		await registerProxyServiceWorker();
+		const controlled = await registerProxyServiceWorker();
+		if (!controlled) return;
 
 		const scramjet = await createScramjetController();
 		await configureTransport();
