@@ -1,0 +1,11 @@
+{
+  "wisp_version": 2,
+  "allow_udp_streams": true,
+  "allow_tcp_streams": true,
+  "allow_direct_ip": true,
+  "allow_private_ips": false,
+  "allow_loopback_ips": false,
+  "dns_method": "resolve",
+  "dns_servers": ["1.1.1.1", "1.0.0.1"],
+  "dns_result_order": "ipv4first"
+}
