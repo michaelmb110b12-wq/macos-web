@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build --configLoader native",
+		"build": "vite build --configLoader runner",
 		"serve": "vite preview",
 		"start": "node server.js",
 		"check": "svelte-check --tsconfig ./tsconfig.json"
