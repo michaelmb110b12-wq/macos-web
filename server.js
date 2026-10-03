@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { hostname } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 
@@ -41,7 +42,13 @@ const fastify = Fastify({
 });
 
 fastify.get('/', async (_request, reply) => {
-	return reply.sendFile('index.html');
+	const html = await readFile(fileURLToPath(new URL('./dist/index.html', import.meta.url)), 'utf8');
+	return reply.type('text/html; charset=utf-8').send(html);
+});
+
+fastify.get('/index.html', async (_request, reply) => {
+	const html = await readFile(fileURLToPath(new URL('./dist/index.html', import.meta.url)), 'utf8');
+	return reply.type('text/html; charset=utf-8').send(html);
 });
 
 await fastify.register(fastifyStatic, {
