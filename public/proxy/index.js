@@ -132,7 +132,7 @@ async function registerProxyServiceWorker() {
 	);
 }
 
-const DEFAULT_WISP_URL = "wss://games-os-h.hostless.app/wisp/";
+const DEFAULT_WISP_URL = "wss://wisp-scramjet-mac.hostless.app/wisp/";
 
 function getWispUrl() {
 	const configured = localStorage.getItem("wispUrl");
