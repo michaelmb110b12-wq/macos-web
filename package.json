@@ -7,7 +7,8 @@
 		"build": "vite build --configLoader runner",
 		"serve": "vite preview",
 		"start": "node server.js",
-		"check": "svelte-check --tsconfig ./tsconfig.json"
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"prebuild": "node scripts/stage-proxy-assets.mjs"
 	},
 	"devDependencies": {
 		"@iconify-json/gg": "^1.2.1",
