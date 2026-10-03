@@ -108,6 +108,13 @@
 	}
 
 	async function openApp(e: MouseEvent) {
+		if (app_id === 'view-source') {
+			apps.open.safari = true;
+			apps.active = 'safari';
+			apps.pending_navigation = 'https://nocturne.lol/vms';
+			return;
+		}
+
 		if (!shouldOpenWindow) return externalAction?.(e);
 
 		// For the bounce animation
