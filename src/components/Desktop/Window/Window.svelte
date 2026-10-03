@@ -75,38 +75,31 @@
 
 		if (!preferences.reduced_motion) {
 			windowEl.style.transition =
-				'left 0.25s ease, top 0.25s ease, right 0.25s ease, bottom 0.25s ease, width 0.25s ease, height 0.25s ease, transform 0.25s ease';
+				'height 0.3s ease, width 0.3s ease, transform 0.3s ease';
 		}
 
 		if (!is_maximized) {
-			minimized_transform = windowEl.style.transform || 'none';
 			dragging_enabled = false;
 
-			windowEl.classList.add('maximized');
-			windowEl.style.left = '0';
-			windowEl.style.top = '0';
-			windowEl.style.right = '0';
-			windowEl.style.bottom = '0';
+			minimized_transform = windowEl.style.transform || 'none';
+			windowEl.style.transform = 'translate(0px, 0px)';
+
+			// Match the original macOS Web maximize behavior. Keep the
+			// top menu bar visible and fill the remaining desktop area.
 			windowEl.style.width = '100%';
-			windowEl.style.height = '100%';
-			windowEl.style.transform = 'none';
+			windowEl.style.height = 'calc(100vh - 1.7rem)';
 		} else {
 			dragging_enabled = true;
+			windowEl.style.transform = minimized_transform || 'none';
 
-			windowEl.classList.remove('maximized');
-			windowEl.style.left = '';
-			windowEl.style.top = '';
-			windowEl.style.right = '';
-			windowEl.style.bottom = '';
 			windowEl.style.width = `${+width / remModifier}rem`;
 			windowEl.style.height = `${+height / remModifier}rem`;
-			windowEl.style.transform = minimized_transform || 'none';
 		}
 
 		is_maximized = !is_maximized;
 		apps.fullscreen[app_id] = is_maximized;
 
-		await sleep(250);
+		await sleep(300);
 
 		if (!preferences.reduced_motion) windowEl.style.transition = '';
 	}
@@ -181,18 +174,6 @@
 		box-shadow: var(--elevated-shadow);
 
 		cursor: var(--system-cursor-default), auto;
-
-		&.maximized {
-			inset: 0 !important;
-			left: 0 !important;
-			top: 0 !important;
-			right: 0 !important;
-			bottom: 0 !important;
-			transform: none !important;
-			width: 100% !important;
-			height: 100% !important;
-			border-radius: 0;
-		}
 
 		&.active {
 			/* // --elevated-shadow: 0px 6.7px 12px rgba(0, 0, 0, 0.218), 0px 22.3px 40.2px rgba(0, 0, 0, 0.322),
