@@ -1,4 +1,5 @@
 import { mount } from 'svelte';
+import { registerSW } from 'virtual:pwa-register';
 import Desktop from './components/Desktop/Desktop.svelte';
 import './css/global.css';
 
@@ -6,32 +7,30 @@ const desktop = mount(Desktop, {
 	target: document.getElementById('root'),
 });
 
-// Remove any old broad-scope worker from previous builds.
-// Scramjet now uses only the dedicated /proxy/ worker.
-async function removeLegacyRootWorker() {
+async function setupServiceWorker() {
 	if (!('serviceWorker' in navigator)) return;
 
-	const siteRoot = new URL('./', window.location.href);
-	const registrations = await navigator.serviceWorker.getRegistrations();
-	let removed = false;
+	try {
+		const registrations = await navigator.serviceWorker.getRegistrations();
 
-	for (const registration of registrations) {
-		if (registration.scope === siteRoot.href) {
-			removed = (await registration.unregister()) || removed;
+		// Remove service workers from older experimental Scramjet layouts.
+		for (const registration of registrations) {
+			const script = registration.active?.scriptURL || registration.waiting?.scriptURL || registration.installing?.scriptURL || '';
+			if (
+				script.includes('/proxy/sw.js') ||
+				script.includes('/scramjet/sw.js') ||
+				(script.endsWith('/sw.js') && registration.scope.endsWith('/macos-web/'))
+			) {
+				await registration.unregister();
+			}
 		}
-	}
 
-	if (removed && sessionStorage.getItem('__legacy_root_sw_removed') !== '1') {
-		sessionStorage.setItem('__legacy_root_sw_removed', '1');
-		window.location.reload();
-		return;
+		await registerSW({ immediate: true });
+	} catch (error) {
+		console.warn('[macos-web] service worker setup failed:', error);
 	}
-
-	sessionStorage.removeItem('__legacy_root_sw_removed');
 }
 
-removeLegacyRootWorker().catch((error) => {
-	console.warn('[macos-web] worker cleanup failed:', error);
-});
+setupServiceWorker();
 
 export default desktop;
