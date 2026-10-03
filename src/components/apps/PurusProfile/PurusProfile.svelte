@@ -6,6 +6,8 @@
 	import GithubIcon from '~icons/mdi/github';
 	import DevToIcon from '~icons/mdi/dev-to';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	function external(node: HTMLAnchorElement) {
 		node.rel = 'noopener noreferrer';
 		node.target = '_blank';
@@ -34,7 +36,7 @@
 	</aside>
 
 	<section class="content">
-		<img height="200" width="200" src="/purus-profile/puru.webp" alt="Puru Vijay Profile pic" />
+		<img height="200" width="200" src={assetBase + 'purus-profile/puru.webp'} alt="Puru Vijay Profile pic" />
 
 		<br />
 
@@ -42,7 +44,7 @@
 
 		<h2>
 			I'm the creator of macOS Web, which you're on right now
-			<img src="/emojis/wink.png" alt="Wink emoji" class="emoji" />
+			<img src={assetBase + 'emojis/wink.png'} alt="Wink emoji" class="emoji" />
 		</h2>
 
 		<br /><br />
@@ -50,7 +52,7 @@
 		<p>
 			I am a fullstack web developer, with an infinite amount of love for frontend web development,
 			esp JavaScript, TypeScript, and for frontend frameworks like Svelte, Vue and React
-			<img src="/emojis/star-struck.png" alt="Star Struck face emoji" class="emoji" />
+			<img src={assetBase + 'emojis/star-struck.png'} alt="Star Struck face emoji" class="emoji" />
 		</p>
 
 		<br /><br />
