@@ -141,25 +141,24 @@ function getWispUrl() {
 
 async function configureTransport() {
 	const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+
 	const wispUrl = getWispUrl();
 
-	// Epoxy is the preferred transport requested for this build.
-	try {
-		if ((await connection.getTransport()) !== "/epoxy/index.mjs") {
-			await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
-		}
+	// Both transports are published as browser ESM bundles. Use the exact
+	// 2.x transport version compatible with the Scramjet 1.1 / bare-mux 2 setup.
+	const epoxyUrl =
+		"https://unpkg.com/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
 
+	const libcurlUrl =
+		"https://unpkg.com/@mercuryworkshop/libcurl-transport@1.5.2/dist/index.mjs";
+
+	try {
+		await connection.setTransport(epoxyUrl, [{ wisp: wispUrl }]);
 		console.log("[proxy] Epoxy transport active");
 		return connection;
 	} catch (epoxyError) {
-		console.warn("[proxy] Epoxy unavailable, falling back to libcurl.", epoxyError);
-
-		if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-			await connection.setTransport("/libcurl/index.mjs", [
-				{ websocket: wispUrl },
-			]);
-		}
-
+		console.warn("[proxy] Epoxy failed, using libcurl.", epoxyError);
+		await connection.setTransport(libcurlUrl, [{ websocket: wispUrl }]);
 		console.log("[proxy] libcurl transport active");
 		return connection;
 	}
