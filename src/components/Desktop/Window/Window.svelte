@@ -238,7 +238,12 @@
 	out:windowCloseTransition
 >
 	<div class="tl-container {app_id}" use:elevation={'window-traffic-lights'}>
-		<TrafficLights {app_id} on_maximize_click={maximizeApp} on_minimize_click={minimizeApp} on_close_app={closeApp} />
+		<TrafficLights
+			{app_id}
+			on_maximize_click={maximizeApp}
+			on_minimize_click={minimizeApp}
+			on_close_app={closeApp}
+		/>
 	</div>
 
 	{#if apps_config[app_id].resizable !== false && !is_maximized}
