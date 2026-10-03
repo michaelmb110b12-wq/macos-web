@@ -105,6 +105,9 @@ async function createScramjetController() {
 	const { ScramjetController } = $scramjetLoadController();
 
 	const controller = new ScramjetController({
+		// Keep Scramjet's rewritten URLs inside /proxy/ so the scoped
+		// /proxy/sw.js service worker can intercept them on GitHub Pages.
+		prefix: new URL("proxy/scramjet/", SITE_ROOT).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
