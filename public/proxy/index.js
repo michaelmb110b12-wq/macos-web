@@ -40,6 +40,36 @@ function getWispUrl() {
 	return configured;
 }
 
+async function registerProxyServiceWorker() {
+	if (!navigator.serviceWorker) {
+		throw new Error("Your browser does not support service workers.");
+	}
+
+	const serviceWorkerUrl = new URL("sw.js", location.href).href;
+	const serviceWorkerScope = new URL("./", location.href).pathname;
+
+	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
+		scope: serviceWorkerScope,
+		updateViaCache: "none",
+	});
+
+	await registration.update();
+	await navigator.serviceWorker.ready;
+
+	const controller = navigator.serviceWorker.controller?.scriptURL || "";
+	if (controller === serviceWorkerUrl) {
+		return true;
+	}
+
+	if (sessionStorage.getItem("__proxy_worker_reload") !== "1") {
+		sessionStorage.setItem("__proxy_worker_reload", "1");
+		location.reload();
+		return false;
+	}
+
+	throw new Error("The Scramjet proxy service worker could not take control of /proxy/.");
+}
+
 async function configureTransport() {
 	if (!globalThis.BareMux?.BareMuxConnection) {
 		throw new Error("BareMux failed to load.");
@@ -78,6 +108,9 @@ async function createScramjetController() {
 
 async function start() {
 	try {
+		const controlled = await registerProxyServiceWorker();
+		if (!controlled) return;
+
 		const scramjet = await createScramjetController();
 		await configureTransport();
 
