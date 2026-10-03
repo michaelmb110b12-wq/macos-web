@@ -75,14 +75,13 @@ async function registerProxyServiceWorker() {
 
 	return true;
 }
-const DEFAULT_WISP_URL = "wss://anura.pro/";
+const DEFAULT_WISP_URL = "wss://wisp.mercurywork.shop/";
 
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
 
-	// The old Hostless endpoint is currently unavailable. Do not keep using a
-	// stale saved endpoint; the static Scramjet reference uses Anura's Wisp
-	// endpoint and its docs expose it as a Wisp-compatible backend.
+	// Use the MercuryWorkshop public Wisp endpoint. It is the current demo endpoint
+	// used in MercuryWorkshop transport examples and works with Scramjet 1.1.
 	if (!configured || /hostless\.app/i.test(configured)) {
 		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 		return DEFAULT_WISP_URL;
