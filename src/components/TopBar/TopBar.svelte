@@ -7,6 +7,8 @@
 	import ActionCenterToggle from './ActionCenterToggle.svelte';
 	import MenuBar from './MenuBar.svelte';
 	import TopBarTime from './TopBarTime.svelte';
+
+	const assetBase = import.meta.env.BASE_URL;
 </script>
 
 <header>
@@ -16,7 +18,7 @@
 
 	{#if should_show_notch.value}
 		<div class="notch" in:fade={{ duration: 150, easing: sineIn }} out:fade_out>
-			<span> <img src="/emojis/wink.png" alt="Wink emoji" class="emoji" /> </span>
+			<span> <img src={assetBase + 'emojis/wink.png'} alt="Wink emoji" class="emoji" /> </span>
 		</div>
 	{/if}
 
