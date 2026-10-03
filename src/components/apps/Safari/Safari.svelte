@@ -133,10 +133,6 @@
 
 <section class:dragging={is_being_dragged} class="container">
 	<header class="titlebar">
-		<div class="traffic-lights" aria-hidden="true">
-			<span></span><span></span><span></span>
-		</div>
-
 		<strong>Safari</strong>
 
 		<button class="new-tab" type="button" onclick={addTab} aria-label="New tab">+</button>
@@ -194,25 +190,11 @@
 	.titlebar {
 		position: relative;
 		min-height: 3rem;
-		padding: 0.55rem 4rem 0.45rem 1rem;
+		padding: 0.55rem 4rem 0.45rem 0.75rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-bottom: 1px solid color-mix(in srgb, var(--system-color-dark) 12%, transparent);
-	}
-
-	.traffic-lights {
-		position: absolute;
-		left: 0.8rem;
-		display: flex;
-		gap: 0.45rem;
-	}
-
-	.traffic-lights span {
-		width: 0.72rem;
-		height: 0.72rem;
-		border-radius: 50%;
-		background: #b9b9b9;
 	}
 
 	.new-tab {
