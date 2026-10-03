@@ -72,32 +72,36 @@
 	}
 
 	async function maximizeApp() {
+		if (!windowEl) return;
+
 		if (!preferences.reduced_motion) {
-			windowEl.style.transition = 'height 0.3s ease, width 0.3s ease, transform 0.3s ease';
+			windowEl.style.transition =
+				'left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease, transform 0.25s ease';
 		}
 
 		if (!is_maximized) {
+			minimized_transform = windowEl.style.transform || 'translate(0px, 0px)';
 			dragging_enabled = false;
 
-			minimized_transform = windowEl.style.transform;
-			windowEl.style.transform = `translate(0px, 0px)`;
-
-			windowEl.style.width = `100%`;
-			// windowEl.style.height = 'calc(100vh - 1.7rem - 5.25rem)';
-			windowEl.style.height = 'calc(100vh - 1.7rem)';
+			windowEl.classList.add('maximized');
+			windowEl.style.left = '0';
+			windowEl.style.top = '0';
+			windowEl.style.transform = 'none';
+			windowEl.style.width = '100%';
+			windowEl.style.height = '100%';
 		} else {
 			dragging_enabled = true;
-			windowEl.style.transform = minimized_transform;
 
+			windowEl.classList.remove('maximized');
+			windowEl.style.transform = minimized_transform || 'translate(0px, 0px)';
 			windowEl.style.width = `${+width / remModifier}rem`;
 			windowEl.style.height = `${+height / remModifier}rem`;
 		}
 
 		is_maximized = !is_maximized;
-
 		apps.fullscreen[app_id] = is_maximized;
 
-		await sleep(300);
+		await sleep(250);
 
 		if (!preferences.reduced_motion) windowEl.style.transition = '';
 	}
@@ -130,6 +134,7 @@
 	class="container"
 	class:dark={preferences.theme.scheme === 'dark'}
 	class:active={apps.active === app_id}
+	class:maximized={is_maximized}
 	style:width="{+width / remModifier}rem"
 	style:height="{+height / remModifier}rem"
 	style:z-index={Math.max(20, apps.z_indices[app_id] || 0)}
@@ -137,7 +142,7 @@
 	bind:this={windowEl}
 	{@attach draggable(() => [
 		controls({ allow: ControlFrom.selector('.app-window-drag-handle') }),
-		bounds(BoundsFrom.viewport({ bottom: -6000, top: 27.2, left: -6000, right: -6000 })),
+		bounds(BoundsFrom.viewport({ bottom: -120, top: 27.2, left: -120, right: -120 })),
 		disabledComp,
 		position({ default: defaultPosition }),
 		events({ onDragStart: onAppDragStart, onDragEnd: onAppDragEnd }),
@@ -172,6 +177,15 @@
 
 		cursor: var(--system-cursor-default), auto;
 
+		&.maximized {
+			left: 0 !important;
+			top: 0 !important;
+			transform: none !important;
+			width: 100% !important;
+			height: 100% !important;
+			border-radius: 0;
+		}
+
 		&.active {
 			/* // --elevated-shadow: 0px 6.7px 12px rgba(0, 0, 0, 0.218), 0px 22.3px 40.2px rgba(0, 0, 0, 0.322),
       //   0px 100px 180px rgba(0, 0, 0, 0.54); */
@@ -192,8 +206,10 @@
 
 	.tl-container {
 		position: absolute;
-		top: 1rem;
-		left: 1rem;
+		top: 0.85rem;
+		left: 0.85rem;
+		z-index: 100;
+		pointer-events: auto;
 
 		/* // Necessary, as `.container` tries to apply shadow on it */
 		box-shadow: none !important;
