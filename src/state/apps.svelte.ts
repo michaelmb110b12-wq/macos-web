@@ -29,6 +29,7 @@ export const apps = $state({
 	} as Record<AppID, number>,
 
 	is_being_dragged: false as boolean,
+	pending_navigation: null as string | null,
 
 	fullscreen: {
 		wallpapers: false,
