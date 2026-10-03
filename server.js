@@ -41,15 +41,15 @@ const fastify = Fastify({
 });
 
 await fastify.register(fastifyStatic, {
-	root: distPath,
-	decorateReply: true,
-});
-
-await fastify.register(fastifyStatic, {
 	root: proxyPath,
 	prefix: '/proxy/',
 	index: 'index.html',
 	decorateReply: false,
+});
+
+await fastify.register(fastifyStatic, {
+	root: distPath,
+	decorateReply: true,
 });
 
 await fastify.register(fastifyStatic, {
