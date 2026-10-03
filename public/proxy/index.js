@@ -40,6 +40,59 @@ async function registerProxyServiceWorker() {
 		throw new Error("Your browser does not support service workers.");
 	}
 
+	const serviceWorkerUrl = new URL("sw.js", SITE_ROOT).href;
+	const serviceWorkerScope = SITE_ROOT.pathname;
+
+	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
+		scope: serviceWorkerScope,
+		updateViaCache: "none",
+	});
+
+	await registration.update();
+	await navigator.serviceWorker.ready;
+	return true;
+}se strict";
+
+const params = new URLSearchParams(location.search);
+const initialUrl = params.get("url") || "about:blank";
+const SITE_ROOT = new URL("../", location.href);
+
+
+function normalizeUrl(value) {
+	const trimmed = String(value || "").trim();
+	if (!trimmed) return "";
+
+	if (/^about:/i.test(trimmed)) return trimmed;
+	if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+	if (trimmed.startsWith("/")) {
+		return new URL(trimmed, location.origin).href;
+	}
+
+	return "https://" + trimmed;
+}
+
+function showError(error) {
+	document.body.replaceChildren();
+
+	const box = document.createElement("pre");
+	box.textContent =
+		"Proxy failed: " +
+		(error instanceof Error ? error.stack || error.message : String(error));
+
+	box.style.cssText =
+		"position:fixed;inset:0;margin:0;padding:24px;box-sizing:border-box;" +
+		"background:#fff;color:#b00020;font:14px/1.5 monospace;" +
+		"white-space:pre-wrap;overflow:auto;";
+
+	document.body.appendChild(box);
+}
+
+async function registerProxyServiceWorker() {
+	if (!navigator.serviceWorker) {
+		throw new Error("Your browser does not support service workers.");
+	}
+
 	const serviceWorkerUrl = new URL("scramjet/sw.js", SITE_ROOT).href;
 	const serviceWorkerScope = new URL("scramjet/", SITE_ROOT).pathname;
 
