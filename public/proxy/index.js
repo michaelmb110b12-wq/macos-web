@@ -3,48 +3,12 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 
-const formUrl = (value) => {
+const COOKIE_DB = "__scramjet_controller";
+const COOKIE_STORE = "state";
+
+function normalizeUrl(value) {
 	if (!value) return "";
 	return /^https?:\/\//i.test(value) ? value : "https://" + value;
-};
-
-const { ScramjetController } = $scramjetLoadController();
-
-const scramjet = new ScramjetController({
-	files: {
-		wasm: "/scram/scramjet.wasm.wasm",
-		all: "/scram/scramjet.all.js",
-		sync: "/scram/scramjet.sync.js",
-	},
-});
-
-// This intentionally matches the upstream Scramjet-App behavior.
-// Do not await init(): controller cookie/state initialization is asynchronous.
-scramjet.init();
-
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
-
-async function useTransport() {
-	const wispUrl =
-		(location.protocol === "https:" ? "wss" : "ws") +
-		"://" +
-		location.host +
-		"/wisp/";
-
-	// Epoxy support requested for this build. Fall back to the upstream
-	// libcurl transport if Epoxy is not available on this connection.
-	try {
-		await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
-		console.log("[scramjet] Epoxy transport active");
-		return "epoxy";
-	} catch (error) {
-		console.warn("[scramjet] Epoxy transport failed, using libcurl", error);
-		await connection.setTransport("/libcurl/index.mjs", [
-			{ websocket: wispUrl },
-		]);
-		console.log("[scramjet] libcurl transport active");
-		return "libcurl";
-	}
 }
 
 function showError(error) {
@@ -53,7 +17,7 @@ function showError(error) {
 	const box = document.createElement("pre");
 	box.textContent =
 		"Proxy failed: " +
-		(error instanceof Error ? error.message : String(error));
+		(error instanceof Error ? error.stack || error.message : String(error));
 	box.style.cssText =
 		"position:fixed;inset:0;margin:0;padding:24px;box-sizing:border-box;" +
 		"white-space:pre-wrap;overflow:auto;background:#fff;color:#b00020;" +
@@ -61,15 +25,128 @@ function showError(error) {
 	document.body.appendChild(box);
 }
 
+async function registerAndTakeControl() {
+	const registration = await navigator.serviceWorker.register("./sw.js", {
+		scope: "./",
+		updateViaCache: "none",
+	});
+
+	await registration.update();
+	await navigator.serviceWorker.ready;
+
+	if (!navigator.serviceWorker.controller) {
+		await new Promise((resolve, reject) => {
+			const timeout = setTimeout(
+				() => reject(new Error("Scramjet service worker did not take control.")),
+				10000,
+			);
+
+			navigator.serviceWorker.addEventListener(
+				"controllerchange",
+				() => {
+					clearTimeout(timeout);
+					resolve();
+				},
+				{ once: true },
+			);
+		});
+	}
+
+	if (!navigator.serviceWorker.controller) {
+		throw new Error("This Safari tab is not controlled by the Scramjet service worker.");
+	}
+}
+
+function deleteCookieDatabase() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.deleteDatabase(COOKIE_DB);
+
+		request.onsuccess = resolve;
+		request.onerror = () =>
+			reject(request.error || new Error("Could not reset Scramjet storage."));
+		request.onblocked = () =>
+			reject(
+				new Error(
+					"Scramjet storage is locked by another proxy tab. Close other proxy tabs and reload.",
+				),
+			);
+	});
+}
+
+async function createController() {
+	const { ScramjetController } = $scramjetLoadController();
+
+	const controller = new ScramjetController({
+		files: {
+			wasm: "/scram/scramjet.wasm.wasm",
+			all: "/scram/scramjet.all.js",
+			sync: "/scram/scramjet.sync.js",
+		},
+	});
+
+	try {
+		await controller.init();
+		return controller;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+
+		if (!message.includes("One of the specified object stores was not found")) {
+			throw error;
+		}
+
+		console.warn("[scramjet] stale IndexedDB schema; resetting it once");
+		await deleteCookieDatabase();
+
+		const repaired = new ScramjetController({
+			files: {
+				wasm: "/scram/scramjet.wasm.wasm",
+				all: "/scram/scramjet.all.js",
+				sync: "/scram/scramjet.sync.js",
+			},
+		});
+
+		await repaired.init();
+		return repaired;
+	}
+}
+
+async function configureTransport() {
+	const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+
+	const wispUrl =
+		(location.protocol === "https:" ? "wss" : "ws") +
+		"://" +
+		location.host +
+		"/wisp/";
+
+	// Prefer Epoxy. If it cannot initialize, use the upstream libcurl transport.
+	try {
+		await connection.setTransport("/epoxy/index.mjs", [{ wisp: wispUrl }]);
+		console.log("[scramjet] Epoxy transport active");
+	} catch (epoxyError) {
+		console.warn("[scramjet] Epoxy failed; falling back to libcurl", epoxyError);
+
+		await connection.setTransport("/libcurl/index.mjs", [
+			{ websocket: wispUrl },
+		]);
+
+		console.log("[scramjet] libcurl transport active");
+	}
+}
+
 async function start() {
 	try {
-		await registerSW();
-		await useTransport();
+		await registerAndTakeControl();
+
+		const scramjet = await createController();
+
+		await configureTransport();
 
 		const frame = scramjet.createFrame();
 		frame.frame.id = "sj-frame";
 		frame.frame.style.cssText =
-			"width:100%;height:100%;border:0;margin:0;padding:0;display:block;background:#fff;";
+			"position:absolute;inset:0;width:100%;height:100%;" +
+			"border:0;margin:0;padding:0;display:block;background:#fff;";
 
 		document.body.appendChild(frame.frame);
 
@@ -83,8 +160,9 @@ async function start() {
 		};
 
 		const go = (url) => {
-			const target = formUrl(url);
+			const target = normalizeUrl(url);
 			if (!target) return;
+
 			frame.go(target);
 			postUrl(target);
 		};
@@ -110,7 +188,7 @@ async function start() {
 			go(initialUrl);
 		}
 	} catch (error) {
-		console.error("[scramjet] proxy startup failed", error);
+		console.error("[scramjet] startup failed", error);
 		showError(error);
 	}
 }
