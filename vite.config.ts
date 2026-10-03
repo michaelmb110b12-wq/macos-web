@@ -6,17 +6,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { prefetch } from './prefetch-plugin';
 
 export default defineConfig({
-	// Relative assets let the same build work from both GitHub Pages (/macos-web/)
-	// and a Bunny CDN/custom-domain root (/).
-	base: './',
+	base: process.env.GITHUB_ACTIONS === 'true' ? '/macos-web/' : '/',
 	plugins: [
 		svelte(),
 		prefetch(),
 		UnpluginIcons({ autoInstall: true, compiler: 'svelte' }),
-
 		VitePWA({
 			strategies: 'injectManifest',
-			registerType: 'autoUpdate',
 			srcDir: 'src',
 			filename: 'sw.ts',
 			includeAssets: ['robots.txt','app-icons/finder/32.png','cover-image.png','cursors/(normal|link|text|help)-select.svg','**/*.mp3'],
@@ -34,7 +30,6 @@ export default defineConfig({
 				],
 			},
 		}),
-
 		imagetools(),
 	],
 	resolve: { alias: { '🍎': new URL('./src/', import.meta.url).pathname } },
