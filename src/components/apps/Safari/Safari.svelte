@@ -93,11 +93,36 @@
 		}
 	}
 
+	function handleGamesNavigation(event: Event) {
+		const url = (event as CustomEvent<string>).detail;
+		if (typeof url !== 'string' || !url.trim()) return;
+		address = url;
+		const tab = activeTab();
+		if (tab) {
+			tab.url = url;
+			try {
+				tab.title = new URL(url).hostname || 'New Tab';
+			} catch {
+				tab.title = 'New Tab';
+			}
+		}
+		sendToTab('navigate', url);
+	}
+
 	function handleMessage(event: MessageEvent) {
 		if (event.origin !== location.origin) return;
 
 		const data = event.data;
 		if (!data?.type) return;
+
+		if (data.type === 'proxy-error') {
+			const frames = Array.from(
+				document.querySelectorAll<HTMLIFrameElement>('iframe[data-proxy-tab]'),
+			);
+			const iframe = frames.find((item) => item.contentWindow === event.source);
+			if (!iframe) return;
+			address = 'Proxy error';
+		}
 
 		if (data.type === 'proxy-ready' || data.type === 'proxy-urlchange') {
 			const frames = Array.from(
@@ -124,10 +149,12 @@
 
 	onMount(() => {
 		window.addEventListener('message', handleMessage);
+		window.addEventListener('proxy-navigate', handleGamesNavigation);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('message', handleMessage);
+		window.removeEventListener('proxy-navigate', handleGamesNavigation);
 	});
 </script>
 
