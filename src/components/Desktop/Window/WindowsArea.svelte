@@ -43,6 +43,8 @@
 <style>
 	section {
 		display: block;
+		position: relative;
+		z-index: 20;
 
 		/* // 1.7 rem is the heigh of the header
     // 5.25 rem is the height of dock
