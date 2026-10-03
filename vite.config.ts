@@ -17,6 +17,9 @@ export default defineConfig({
 			strategies: 'injectManifest',
 			srcDir: 'src',
 			filename: 'sw.ts',
+			injectManifest: {
+				injectionPoint: undefined,
+			},
 			includeAssets: ['robots.txt','app-icons/finder/32.png','cover-image.png','cursors/(normal|link|text|help)-select.svg','**/*.mp3'],
 			manifest: {
 				name: 'Mac OS Monterey Svelte Web',
