@@ -9,6 +9,7 @@ import { epoxyPath } from '@mercuryworkshop/epoxy-transport';
 import { baremuxPath } from '@mercuryworkshop/bare-mux/node';
 
 const distPath = fileURLToPath(new URL('./dist/', import.meta.url));
+const proxyPath = fileURLToPath(new URL('./public/proxy/', import.meta.url));
 
 logging.set_level(logging.NONE);
 Object.assign(wisp.options, {
@@ -19,14 +20,20 @@ Object.assign(wisp.options, {
 console.log('[startup] loading macOS Web server');
 console.log('[startup] PORT =', process.env.PORT ?? '(not set)');
 console.log('[startup] dist =', distPath);
+console.log('[startup] proxy =', proxyPath);
 
-const fastify = Fastify({
-	logger: true,
-});
+const fastify = Fastify({ logger: true });
 
 fastify.addHook('onSend', async (_request, reply) => {
 	reply.header('Cross-Origin-Opener-Policy', 'same-origin');
 	reply.header('Cross-Origin-Embedder-Policy', 'require-corp');
+});
+
+await fastify.register(fastifyStatic, {
+	root: proxyPath,
+	prefix: '/proxy/',
+	decorateReply: false,
+	index: 'index.html',
 });
 
 await fastify.register(fastifyStatic, {
@@ -54,6 +61,8 @@ await fastify.register(fastifyStatic, {
 
 fastify.get('/health', async () => ({ ok: true }));
 
+fastify.get('/proxy', async (_request, reply) => reply.redirect('/proxy/'));
+
 fastify.setNotFoundHandler(async (_request, reply) => {
 	try {
 		return await reply.sendFile('index.html');
@@ -65,13 +74,11 @@ fastify.setNotFoundHandler(async (_request, reply) => {
 fastify.server.on('upgrade', (req, socket, head) => {
 	try {
 		const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
-
 		if (pathname === '/wisp/' || pathname === '/wisp') {
 			req.url = '/wisp/';
 			wisp.routeRequest(req, socket, head);
 			return;
 		}
-
 		socket.destroy();
 	} catch {
 		socket.destroy();
@@ -81,11 +88,7 @@ fastify.server.on('upgrade', (req, socket, head) => {
 const port = Number(process.env.PORT || 8080);
 
 try {
-	const address = await fastify.listen({
-		port,
-		host: '0.0.0.0',
-	});
-
+	const address = await fastify.listen({ port, host: '0.0.0.0' });
 	console.log(`[startup] macOS Web listening at ${address}`);
 	console.log(`[startup] host = ${hostname()}`);
 } catch (error) {
