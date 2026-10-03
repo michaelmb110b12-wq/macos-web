@@ -8,15 +8,20 @@ async function repairScramjetDatabase() {
 	if (!('indexedDB' in window)) return;
 
 	const hasStore = await new Promise((resolve, reject) => {
-		const request = indexedDB.open(SCRAMJET_COOKIE_DB);
+		const request = indexedDB.open(SCRAMJET_COOKIE_DB, 1);
+
+		request.onupgradeneeded = () => {
+			const db = request.result;
+
+			// If the database does not exist yet, create the exact schema
+			// expected by ScramjetController.
+			if (!db.objectStoreNames.contains(SCRAMJET_COOKIE_STORE)) {
+				db.createObjectStore(SCRAMJET_COOKIE_STORE);
+			}
+		};
 
 		request.onerror = () =>
 			reject(request.error ?? new Error('Unable to inspect Scramjet IndexedDB.'));
-
-		request.onupgradeneeded = () => {
-			// Let ScramjetController create its version-1 schema.
-			request.transaction?.abort();
-		};
 
 		request.onsuccess = () => {
 			const db = request.result;
@@ -32,14 +37,17 @@ async function repairScramjetDatabase() {
 
 	await new Promise((resolve, reject) => {
 		const request = indexedDB.deleteDatabase(SCRAMJET_COOKIE_DB);
+
 		request.onerror = () =>
 			reject(request.error ?? new Error('Failed to reset Scramjet IndexedDB.'));
+
 		request.onblocked = () =>
 			reject(
 				new Error(
 					'The old Scramjet database is still open. Close other proxy tabs and reload.',
 				),
 			);
+
 		request.onsuccess = resolve;
 	});
 }
