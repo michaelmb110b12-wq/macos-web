@@ -2,7 +2,7 @@
 	import { apps } from '🍎/state/apps.svelte.ts';
 
 	const cloudUrl = 'https://figure-cloud-cine.b-cdn.net/';
-	const gnMathUrl = 'https://gn-math.com/';
+	const gnMathUrl = '/app-icons/gnmath.svg';
 
 	function openInSafari(url: string) {
 		apps.open.safari = true;
