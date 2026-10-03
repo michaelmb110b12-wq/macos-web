@@ -1,6 +1,49 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get('url') || 'about:blank';
 
+const SCRAMJET_COOKIE_DB = '__scramjet_controller';
+const SCRAMJET_COOKIE_STORE = 'state';
+
+async function repairScramjetDatabase() {
+	if (!('indexedDB' in window)) return;
+
+	const hasStore = await new Promise((resolve, reject) => {
+		const request = indexedDB.open(SCRAMJET_COOKIE_DB);
+
+		request.onerror = () =>
+			reject(request.error ?? new Error('Unable to inspect Scramjet IndexedDB.'));
+
+		request.onupgradeneeded = () => {
+			// Let ScramjetController create its version-1 schema.
+			request.transaction?.abort();
+		};
+
+		request.onsuccess = () => {
+			const db = request.result;
+			const exists = db.objectStoreNames.contains(SCRAMJET_COOKIE_STORE);
+			db.close();
+			resolve(exists);
+		};
+	});
+
+	if (hasStore) return;
+
+	console.warn('[proxy] resetting stale Scramjet IndexedDB schema');
+
+	await new Promise((resolve, reject) => {
+		const request = indexedDB.deleteDatabase(SCRAMJET_COOKIE_DB);
+		request.onerror = () =>
+			reject(request.error ?? new Error('Failed to reset Scramjet IndexedDB.'));
+		request.onblocked = () =>
+			reject(
+				new Error(
+					'The old Scramjet database is still open. Close other proxy tabs and reload.',
+				),
+			);
+		request.onsuccess = resolve;
+	});
+}
+
 async function startProxy() {
 	if (!navigator.serviceWorker) {
 		throw new Error('Service workers are unavailable.');
@@ -63,7 +106,7 @@ async function startProxy() {
 
 	const { ScramjetController } = $scramjetLoadController();
 
-	const scramjet = new ScramjetController({
+	let scramjet = new ScramjetController({
 		files: {
 			wasm: '/scram/scramjet.wasm.wasm',
 			all: '/scram/scramjet.all.js',
@@ -74,24 +117,25 @@ async function startProxy() {
 	try {
 		await scramjet.init();
 	} catch (firstError) {
-		const message = firstError instanceof Error ? firstError.message : String(firstError);
+		const message =
+			firstError instanceof Error ? firstError.message : String(firstError);
 
-		if (message.includes('One of the specified object stores was not found')) {
-			console.warn('[proxy] stale Scramjet IndexedDB detected; resetting and retrying');
-			await repairScramjetDatabase();
-
-			const repaired = new ScramjetController({
-				files: {
-					wasm: '/scram/scramjet.wasm.wasm',
-					all: '/scram/scramjet.all.js',
-					sync: '/scram/scramjet.sync.js',
-				},
-			});
-
-			await repaired.init();
-		} else {
+		if (!message.includes('One of the specified object stores was not found')) {
 			throw firstError;
 		}
+
+		console.warn('[proxy] stale Scramjet IndexedDB detected; resetting and retrying');
+		await repairScramjetDatabase();
+
+		scramjet = new ScramjetController({
+			files: {
+				wasm: '/scram/scramjet.wasm.wasm',
+				all: '/scram/scramjet.all.js',
+				sync: '/scram/scramjet.sync.js',
+			},
+		});
+
+		await scramjet.init();
 	}
 
 	const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
