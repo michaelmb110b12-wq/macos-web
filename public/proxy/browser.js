@@ -132,9 +132,11 @@ async function registerProxyServiceWorker() {
 	);
 }
 
+const DEFAULT_WISP_URL = "wss://games-os-h.hostless.app/wisp/";
+
 function getWispUrl() {
-	const protocol = location.protocol === "https:" ? "wss" : "ws";
-	return protocol + "://" + location.host + "/wisp/";
+	const configured = localStorage.getItem("wispUrl");
+	return configured || DEFAULT_WISP_URL;
 }
 
 async function configureTransport() {
