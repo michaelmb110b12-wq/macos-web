@@ -4,9 +4,7 @@
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
-	// Resolve the app root from the actual page URL so both GitHub Pages
-	// (/macos-web/) and Bunny/custom-domain roots (/) work with base: './'.
-	const siteBase = new URL('./', location.href);
+	const siteBase = new URL(import.meta.env.BASE_URL, location.origin);
 	const proxyEntry = new URL('proxy/index.html', siteBase).href;
 	const browserHome = new URL('blueberry_mac_os_banner.html', siteBase).href;
 
@@ -46,21 +44,7 @@
 	}
 
 	function iframeSrc(tab: Tab) {
-		if (isLocalUrl(tab.srcUrl)) {
-			try {
-				const target = new URL(tab.srcUrl, location.href);
-				const appRoot = new URL('./', location.href);
-				const browserRoot = new URL(browserHome);
-				// Never embed the macOS app inside itself.
-				if (
-					target.origin === location.origin &&
-					(target.pathname === appRoot.pathname || target.href === browserRoot.href)
-				) {
-					return browserHome;
-				}
-			} catch {}
-			return tab.srcUrl;
-		}
+		if (isLocalUrl(tab.srcUrl)) return tab.srcUrl;
 		return `${proxyEntry}?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`;
 	}
 
