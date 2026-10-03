@@ -3,8 +3,8 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const SITE_ROOT = new URL("../", location.href);
-const IS_BUNNY_CDN = /\\.b-cdn\\.net$/i.test(location.hostname);
-const SW_VERSION = "20261003-bunny-v1";
+const IS_BUNNY_CDN = /\.b-cdn\.net$/i.test(location.hostname);
+const SW_VERSION = "20261003-bunny-v2";
 
 
 function normalizeUrl(value) {
@@ -83,15 +83,18 @@ const DEFAULT_WISP_URL = "wss://anura.pro/";
 const BUNNY_WISP_URL = "wss://wisp.mercurywork.shop/";
 
 function getWispUrl() {
-	const configured = (localStorage.getItem("wispUrl") || "").trim();
+	// Bunny CDN uses the public Mercury Wisp endpoint. Force it here so a
+	// previously saved Wisp setting cannot keep the Bunny instance on an
+	// incompatible/stale endpoint.
+	if (IS_BUNNY_CDN) {
+		localStorage.setItem("wispUrl", BUNNY_WISP_URL);
+		return BUNNY_WISP_URL;
+	}
 
-	// The old Hostless endpoint is currently unavailable. Do not keep using a
-	// stale saved endpoint; the static Scramjet reference uses Anura's Wisp
-	// endpoint and its docs expose it as a Wisp-compatible backend.
+	const configured = (localStorage.getItem("wispUrl") || "").trim();
 	if (!configured || /hostless\.app/i.test(configured)) {
-		const fallback = IS_BUNNY_CDN ? BUNNY_WISP_URL : DEFAULT_WISP_URL;
-		localStorage.setItem("wispUrl", fallback);
-		return fallback;
+		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
+		return DEFAULT_WISP_URL;
 	}
 
 	return configured;
