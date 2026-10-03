@@ -25,9 +25,30 @@ const fastify = Fastify({
 	logger: true,
 	serverFactory: (handler) =>
 		createServer()
-			.on('request', (req, res) => {
+			.on('request', async (req, res) => {
 				res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
 				res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+
+				const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
+
+				// Serve the built Vite entry directly at the Node HTTP layer.
+				// This bypasses any static-plugin 404 handling for the root URL.
+				if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
+					try {
+						const html = await readFile(rootIndexPath, 'utf8');
+						res.statusCode = 200;
+						res.setHeader('Content-Type', 'text/html; charset=utf-8');
+						res.setHeader('Cache-Control', 'no-cache');
+						res.end(html);
+					} catch (error) {
+						console.error('[startup] unable to serve dist/index.html', error);
+						res.statusCode = 500;
+						res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+						res.end('macOS Web frontend is not available.');
+					}
+					return;
+				}
+
 				handler(req, res);
 			})
 			.on('upgrade', (req, socket, head) => {
