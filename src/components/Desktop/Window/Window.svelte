@@ -121,6 +121,96 @@
 		apps.is_being_dragged = false;
 	}
 
+	type ResizeDirection = 'nw' | 'ne' | 'sw' | 'se';
+
+	function resizeFromCorner(event: PointerEvent, direction: ResizeDirection) {
+		if (!windowEl || apps_config[app_id].resizable === false || is_maximized) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		const rect = windowEl.getBoundingClientRect();
+		const startWidth = rect.width;
+		const startHeight = rect.height;
+		const startLeft = rect.left;
+		const startTop = rect.top;
+		const startTransform = getComputedStyle(windowEl).transform;
+		let transformX = 0;
+		let transformY = 0;
+
+		try {
+			const matrix = new DOMMatrix(startTransform);
+			transformX = matrix.m41;
+			transformY = matrix.m42;
+		} catch {
+			// Keep the transform at zero if the browser cannot parse it.
+		}
+
+		const minWidth = 360;
+		const minHeight = 240;
+		const pointerId = event.pointerId;
+		const startX = event.clientX;
+		const startY = event.clientY;
+
+		const move = (moveEvent: PointerEvent) => {
+			const dx = moveEvent.clientX - startX;
+			const dy = moveEvent.clientY - startY;
+
+			let nextWidth = startWidth;
+			let nextHeight = startHeight;
+			let nextTransformX = transformX;
+			let nextTransformY = transformY;
+
+			if (direction.includes('e')) nextWidth = startWidth + dx;
+			if (direction.includes('s')) nextHeight = startHeight + dy;
+
+			if (direction.includes('w')) {
+				nextWidth = startWidth - dx;
+
+				if (nextWidth < minWidth) {
+					nextWidth = minWidth;
+					nextTransformX = transformX - (minWidth - startWidth);
+				} else {
+					nextTransformX = transformX + dx;
+				}
+			}
+
+			if (direction.includes('n')) {
+				nextHeight = startHeight - dy;
+
+				if (nextHeight < minHeight) {
+					nextHeight = minHeight;
+					nextTransformY = transformY - (minHeight - startHeight);
+				} else {
+					nextTransformY = transformY + dy;
+				}
+			}
+
+			nextWidth = Math.max(minWidth, nextWidth);
+			nextHeight = Math.max(minHeight, nextHeight);
+
+			windowEl.style.width = `${nextWidth}px`;
+			windowEl.style.height = `${nextHeight}px`;
+
+			if (direction.includes('w') || direction.includes('n')) {
+				windowEl.style.transform =
+					`translate(${nextTransformX}px, ${nextTransformY}px)`;
+			}
+		};
+
+		const stop = () => {
+			window.removeEventListener('pointermove', move);
+			window.removeEventListener('pointerup', stop);
+			window.removeEventListener('pointercancel', stop);
+			windowEl?.releasePointerCapture?.(pointerId);
+		};
+
+		windowEl.setPointerCapture?.(pointerId);
+		window.addEventListener('pointermove', move);
+		window.addEventListener('pointerup', stop, { once: true });
+		window.addEventListener('pointercancel', stop, { once: true });
+	}
+
 	onMount(() => windowEl?.focus());
 </script>
 
@@ -150,6 +240,13 @@
 	<div class="tl-container {app_id}" use:elevation={'window-traffic-lights'}>
 		<TrafficLights {app_id} on_maximize_click={maximizeApp} on_minimize_click={minimizeApp} on_close_app={closeApp} />
 	</div>
+
+	{#if apps_config[app_id].resizable !== false && !is_maximized}
+		<div class="resize-handle resize-nw" aria-hidden="true" onpointerdown={(event) => resizeFromCorner(event, 'nw')}></div>
+		<div class="resize-handle resize-ne" aria-hidden="true" onpointerdown={(event) => resizeFromCorner(event, 'ne')}></div>
+		<div class="resize-handle resize-sw" aria-hidden="true" onpointerdown={(event) => resizeFromCorner(event, 'sw')}></div>
+		<div class="resize-handle resize-se" aria-hidden="true" onpointerdown={(event) => resizeFromCorner(event, 'se')}></div>
+	{/if}
 
 	<AppNexus {app_id} is_being_dragged={apps.is_being_dragged} />
 </section>
@@ -189,6 +286,40 @@
 					var(--elevated-shadow);
 			}
 		}
+	}
+
+	.resize-handle {
+		position: absolute;
+		z-index: 120;
+		width: 14px;
+		height: 14px;
+		background: transparent;
+		touch-action: none;
+		user-select: none;
+	}
+
+	.resize-nw {
+		top: 0;
+		left: 0;
+		cursor: nwse-resize;
+	}
+
+	.resize-ne {
+		top: 0;
+		right: 0;
+		cursor: nesw-resize;
+	}
+
+	.resize-sw {
+		bottom: 0;
+		left: 0;
+		cursor: nesw-resize;
+	}
+
+	.resize-se {
+		bottom: 0;
+		right: 0;
+		cursor: nwse-resize;
 	}
 
 	.tl-container {
