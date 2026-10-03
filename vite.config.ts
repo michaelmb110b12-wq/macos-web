@@ -2,6 +2,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import UnpluginIcons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
 import { imagetools } from 'vite-imagetools';
+import { VitePWA } from 'vite-plugin-pwa';
 import { prefetch } from './prefetch-plugin';
 
 export default defineConfig({
@@ -12,6 +13,26 @@ export default defineConfig({
 		svelte(),
 		prefetch(),
 		UnpluginIcons({ autoInstall: true, compiler: 'svelte' }),
+
+		VitePWA({
+			strategies: 'injectManifest',
+			srcDir: 'src',
+			filename: 'sw.ts',
+			includeAssets: ['robots.txt','app-icons/finder/32.png','cover-image.png','cursors/(normal|link|text|help)-select.svg','**/*.mp3'],
+			manifest: {
+				name: 'Mac OS Monterey Svelte Web',
+				short_name: 'macOS Svelte',
+				theme_color: '#ffffff',
+				description: 'Mac OS Monterey Web written in Svelte',
+				icons: [
+					{ src:'app-icons/finder/128.png', sizes:'128x128', type:'image/png' },
+					{ src:'app-icons/finder/192.png', sizes:'192x192', type:'image/png' },
+					{ src:'app-icons/finder/256.png', sizes:'256x256', type:'image/png' },
+					{ src:'app-icons/finder/512.png', sizes:'512x512', type:'image/png' },
+					{ src:'app-icons/finder/512.png', sizes:'512x512', type:'image/png', purpose:'any maskable' },
+				],
+			},
+		}),
 
 		imagetools(),
 	],
