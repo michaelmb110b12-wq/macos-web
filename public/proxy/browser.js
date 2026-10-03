@@ -71,7 +71,28 @@ async function startProxy() {
 		},
 	});
 
-	await scramjet.init();
+	try {
+		await scramjet.init();
+	} catch (firstError) {
+		const message = firstError instanceof Error ? firstError.message : String(firstError);
+
+		if (message.includes('One of the specified object stores was not found')) {
+			console.warn('[proxy] stale Scramjet IndexedDB detected; resetting and retrying');
+			await repairScramjetDatabase();
+
+			const repaired = new ScramjetController({
+				files: {
+					wasm: '/scram/scramjet.wasm.wasm',
+					all: '/scram/scramjet.all.js',
+					sync: '/scram/scramjet.sync.js',
+				},
+			});
+
+			await repaired.init();
+		} else {
+			throw firstError;
+		}
+	}
 
 	const connection = new BareMux.BareMuxConnection('/baremux/worker.js');
 	const wispUrl =
