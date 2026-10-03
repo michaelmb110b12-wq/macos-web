@@ -50,7 +50,22 @@ async function registerProxyServiceWorker() {
 
 	await registration.update();
 	await navigator.serviceWorker.ready;
-	return true;
+
+	const currentController = navigator.serviceWorker.controller?.scriptURL || "";
+	if (currentController === serviceWorkerUrl) {
+		sessionStorage.removeItem("__scramjet_scope_reload");
+		return true;
+	}
+
+	// The normal PWA worker owns the app root. Reload this dedicated
+	// /scramjet/ page once so its narrower Scramjet worker takes control.
+	if (sessionStorage.getItem("__scramjet_scope_reload") !== "1") {
+		sessionStorage.setItem("__scramjet_scope_reload", "1");
+		location.reload();
+		return false;
+	}
+
+	throw new Error("The Scramjet service worker could not take control of /scramjet/.");
 }se strict";
 
 const params = new URLSearchParams(location.search);
