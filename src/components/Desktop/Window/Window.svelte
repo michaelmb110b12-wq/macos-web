@@ -142,7 +142,7 @@
 	class:maximized={is_maximized}
 	style:width="{+width / remModifier}rem"
 	style:height="{+height / remModifier}rem"
-	style:z-index={Math.max(20, apps.z_indices[app_id] || 0)}
+	style:z-index={apps.z_indices[app_id] || 0}
 	tabindex="-1"
 	bind:this={windowEl}
 	{@attach draggable(() => [
