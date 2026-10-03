@@ -26,35 +26,11 @@ function showError(error) {
 }
 
 async function registerAndTakeControl() {
-	const registration = await navigator.serviceWorker.register("./sw.js", {
-		scope: "./",
-		updateViaCache: "none",
-	});
-
-	await registration.update();
-	await navigator.serviceWorker.ready;
-
-	if (!navigator.serviceWorker.controller) {
-		await new Promise((resolve, reject) => {
-			const timeout = setTimeout(
-				() => reject(new Error("Scramjet service worker did not take control.")),
-				10000,
-			);
-
-			navigator.serviceWorker.addEventListener(
-				"controllerchange",
-				() => {
-					clearTimeout(timeout);
-					resolve();
-				},
-				{ once: true },
-			);
-		});
+	if (typeof registerSW !== "function") {
+		throw new Error("Scramjet service worker registration script did not load.");
 	}
 
-	if (!navigator.serviceWorker.controller) {
-		throw new Error("This Safari tab is not controlled by the Scramjet service worker.");
-	}
+	return registerSW();
 }
 
 function deleteCookieDatabase() {
