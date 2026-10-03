@@ -41,5 +41,9 @@
 		"date-fns": "^4.4.0",
 		"popmotion": "^11.0.5",
 		"unplugin-icons": "^23.0.1"
+	},
+	"packageManager": "npm@10.9.2",
+	"engines": {
+		"node": ">=20"
 	}
 }
