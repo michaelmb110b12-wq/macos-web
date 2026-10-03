@@ -3,178 +3,158 @@
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
-	let browserHost = $state<HTMLDivElement>();
+	type Tab = {
+		id: number;
+		title: string;
+		url: string;
+	};
+
+	let tabs = $state<Tab[]>([
+		{ id: 1, title: 'New Tab', url: 'https://example.com' },
+	]);
+	let activeTabId = $state(1);
+	let nextTabId = 2;
 	let address = $state('https://example.com');
-	let status = $state('Starting proxy…');
-	let error = $state('');
-	let frame: any = null;
-	let initialized = false;
 
-	function loadScript(src: string) {
-		return new Promise<void>((resolve, reject) => {
-			const selector = `script[data-proxy-src="${src}"]`;
-			const existing = document.querySelector(selector) as HTMLScriptElement | null;
-
-			if (existing) {
-				if ((existing as any).__loaded) return resolve();
-				existing.addEventListener('load', () => resolve(), { once: true });
-				existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
-				return;
-			}
-
-			const script = document.createElement('script');
-			script.src = src;
-			script.dataset.proxySrc = src;
-			script.onload = () => {
-				(script as any).__loaded = true;
-				resolve();
-			};
-			script.onerror = () => reject(new Error(`Failed to load ${src}`));
-			document.head.appendChild(script);
-		});
+	function activeTab() {
+		return tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
 	}
 
-	async function ensureServiceWorkerControl() {
-		const registration = await navigator.serviceWorker.register('/sw.js', {
-			scope: '/',
-			updateViaCache: 'none',
-		});
+	function normalizeUrl(value: string) {
+		const trimmed = value.trim();
+		if (!trimmed) return '';
 
-		await navigator.serviceWorker.ready;
-
-		if (navigator.serviceWorker.controller) return;
-
-		const active = registration.active;
-		if (active) active.postMessage({ type: 'SKIP_WAITING' });
-
-		await new Promise<void>((resolve, reject) => {
-			const timeout = window.setTimeout(() => {
-				reject(new Error('Proxy service worker did not take control. Reload the page once and try again.'));
-			}, 10000);
-
-			navigator.serviceWorker.addEventListener(
-				'controllerchange',
-				() => {
-					window.clearTimeout(timeout);
-					resolve();
-				},
-				{ once: true },
-			);
-		});
+		return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 	}
 
-	async function initProxy() {
-		status = 'Loading proxy…';
+	function sendToTab(type: string, url?: string) {
+		const iframe = document.querySelector(
+			`iframe[data-proxy-tab="${activeTabId}"]`,
+		) as HTMLIFrameElement | null;
 
-		await loadScript('/baremux/index.js');
-		await loadScript('/scram/scramjet.all.js');
-		await ensureServiceWorkerControl();
+		if (!iframe?.contentWindow) return;
 
-		const bare = (window as any).BareMux;
-		if (!bare?.BareMuxConnection) throw new Error('BareMux failed to load.');
-
-		const connection = new bare.BareMuxConnection('/baremux/worker.js');
-		const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-
-		await connection.setTransport('/epoxy/index.mjs', [
-			{ wisp: `${scheme}://${location.host}/wisp/` },
-		]);
-
-		const loader = (window as any).$scramjetLoadController;
-		if (!loader) throw new Error('Scramjet controller failed to load.');
-
-		const { ScramjetController } = loader();
-
-		const controller = new ScramjetController({
-			files: {
-				wasm: '/scram/scramjet.wasm.wasm',
-				all: '/scram/scramjet.all.js',
-				sync: '/scram/scramjet.sync.js',
-			},
-		});
-
-		await controller.init();
-		frame = controller.createFrame();
-
-		const element = frame.frame ?? frame.element;
-		if (!element) throw new Error('Scramjet frame was not created.');
-
-		element.style.width = '100%';
-		element.style.height = '100%';
-		element.style.border = '0';
-		element.style.display = 'block';
-		element.setAttribute('title', 'Safari Browser');
-		element.setAttribute('draggable', 'false');
-
-		browserHost?.appendChild(element);
-
-		frame.addEventListener?.('urlchange', () => {
-			if (frame.url) address = frame.url;
-		});
-
-		initialized = true;
-		status = 'Ready';
-		frame.go(address);
+		iframe.contentWindow.postMessage(
+			url ? { type, url } : { type },
+			location.origin,
+		);
 	}
 
-	function navigate(url = address) {
-		const value = url.trim();
-		if (!value) return;
+	function navigate(value = address) {
+		const target = normalizeUrl(value);
+		if (!target) return;
 
-		const target = /^https?:\/\//i.test(value) ? value : `https://${value}`;
 		address = target;
 
-		if (!initialized || !frame) {
-			status = 'Starting proxy…';
-			return;
+		const tab = activeTab();
+		if (tab) {
+			tab.url = target;
+			tab.title = new URL(target).hostname || 'New Tab';
 		}
 
-		try {
-			frame.go(target);
-			status = 'Ready';
-			error = '';
-		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
-			status = 'Proxy error';
-		}
+		sendToTab('navigate', target);
 	}
 
 	function reload() {
-		if (frame?.url) {
-			frame.go(frame.url);
+		sendToTab('reload');
+	}
+
+	function selectTab(id: number) {
+		activeTabId = id;
+		const tab = activeTab();
+		address = tab?.url ?? 'https://example.com';
+	}
+
+	function addTab() {
+		const id = nextTabId++;
+		tabs = [
+			...tabs,
+			{ id, title: 'New Tab', url: 'https://example.com' },
+		];
+		activeTabId = id;
+		address = 'https://example.com';
+	}
+
+	function closeTab(id: number) {
+		if (tabs.length === 1) {
+			tabs = [{ id: 1, title: 'New Tab', url: 'https://example.com' }];
+			activeTabId = 1;
+			nextTabId = Math.max(nextTabId, 2);
 			return;
 		}
 
-		if (frame) frame.go(address);
-	}
+		const index = tabs.findIndex((tab) => tab.id === id);
+		tabs = tabs.filter((tab) => tab.id !== id);
 
-	function launchHandler(event: Event) {
-		const url = (event as CustomEvent<string>).detail;
-		if (url) navigate(url);
-	}
-
-	onMount(async () => {
-		window.addEventListener('proxy-navigate', launchHandler);
-
-		try {
-			await initProxy();
-		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
-			status = 'Proxy failed';
-			console.error('[Safari proxy]', e);
+		if (id === activeTabId) {
+			const replacement = tabs[Math.max(0, index - 1)] ?? tabs[0];
+			activeTabId = replacement.id;
+			address = replacement.url;
 		}
+	}
+
+	function handleMessage(event: MessageEvent) {
+		if (event.origin !== location.origin) return;
+
+		const data = event.data;
+		if (!data?.type) return;
+
+		if (data.type === 'proxy-ready' || data.type === 'proxy-urlchange') {
+			const frames = Array.from(
+				document.querySelectorAll<HTMLIFrameElement>('iframe[data-proxy-tab]'),
+			);
+
+			const iframe = frames.find((item) => item.contentWindow === event.source);
+			if (!iframe) return;
+
+			const id = Number(iframe.dataset.proxyTab);
+			const tab = tabs.find((item) => item.id === id);
+			if (!tab || typeof data.url !== 'string') return;
+
+			tab.url = data.url;
+			try {
+				tab.title = new URL(data.url).hostname || 'New Tab';
+			} catch {
+				tab.title = 'New Tab';
+			}
+
+			if (id === activeTabId) address = data.url;
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener('message', handleMessage);
 	});
 
 	onDestroy(() => {
-		window.removeEventListener('proxy-navigate', launchHandler);
-		try {
-			frame?.frame?.remove();
-		} catch {}
+		window.removeEventListener('message', handleMessage);
 	});
 </script>
 
 <section class:dragging={is_being_dragged} class="container">
-	<header class="app-window-drag-handle">Safari</header>
+	<header class="titlebar">
+		<div class="traffic-lights" aria-hidden="true">
+			<span></span><span></span><span></span>
+		</div>
+
+		<strong>Safari</strong>
+
+		<button class="new-tab" type="button" onclick={addTab} aria-label="New tab">+</button>
+	</header>
+
+	<nav class="tabs" aria-label="Browser tabs">
+		{#each tabs as tab}
+			<button
+				type="button"
+				class:active={tab.id === activeTabId}
+				class="tab"
+				onclick={() => selectTab(tab.id)}
+			>
+				<span>{tab.title}</span>
+				<span class="tab-close" onclick={(event) => { event.stopPropagation(); closeTab(tab.id); }}>×</span>
+			</button>
+		{/each}
+	</nav>
 
 	<div class="toolbar">
 		<button type="button" onclick={reload} aria-label="Reload">↻</button>
@@ -187,8 +167,16 @@
 		<button type="button" onclick={() => navigate()}>Go</button>
 	</div>
 
-	<div class="status">{status}{#if error} — {error}{/if}</div>
-	<div class="browser-host" bind:this={browserHost}></div>
+	<div class="browser-host">
+		{#each tabs as tab}
+			<iframe
+				src={`/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.url)}`}
+				data-proxy-tab={tab.id}
+				title={tab.title}
+				class:hidden={tab.id !== activeTabId}
+			></iframe>
+		{/each}
+	</div>
 </section>
 
 <style>
@@ -203,14 +191,82 @@
 		min-height: 0;
 	}
 
-	header {
+	.titlebar {
+		position: relative;
 		min-height: 3rem;
-		padding: 0.9rem 1rem 0.2rem;
+		padding: 0.55rem 4rem 0.45rem 1rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 1.05rem;
-		font-weight: 600;
+		border-bottom: 1px solid color-mix(in srgb, var(--system-color-dark) 12%, transparent);
+	}
+
+	.traffic-lights {
+		position: absolute;
+		left: 0.8rem;
+		display: flex;
+		gap: 0.45rem;
+	}
+
+	.traffic-lights span {
+		width: 0.72rem;
+		height: 0.72rem;
+		border-radius: 50%;
+		background: #b9b9b9;
+	}
+
+	.new-tab {
+		position: absolute;
+		right: 0.8rem;
+		width: 1.8rem;
+		height: 1.8rem;
+		border: 0;
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--system-color-dark) 10%, transparent);
+		color: inherit;
+		font-size: 1.2rem;
+		cursor: pointer;
+	}
+
+	.tabs {
+		display: flex;
+		align-items: stretch;
+		gap: 0.15rem;
+		padding: 0.3rem 0.45rem 0;
+		overflow-x: auto;
+		background: color-mix(in srgb, var(--system-color-dark) 5%, transparent);
+	}
+
+	.tab {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		max-width: 13rem;
+		min-width: 7rem;
+		padding: 0.45rem 0.65rem;
+		border: 0;
+		border-radius: 0.5rem 0.5rem 0 0;
+		background: transparent;
+		color: inherit;
+		opacity: 0.7;
+		cursor: pointer;
+	}
+
+	.tab.active {
+		background: color-mix(in srgb, var(--system-color-dark) 10%, transparent);
+		opacity: 1;
+	}
+
+	.tab span:first-child {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1;
+	}
+
+	.tab-close {
+		opacity: 0.7;
+		font-size: 1rem;
 	}
 
 	.toolbar {
@@ -242,24 +298,24 @@
 		outline: none;
 	}
 
-	.status {
-		font-size: 0.78rem;
-		opacity: 0.65;
-		padding: 0.25rem 0.65rem;
-		min-height: 1.15rem;
-	}
-
 	.browser-host {
+		position: relative;
 		min-height: 0;
 		overflow: hidden;
 		background: white;
 	}
 
-	.browser-host :global(iframe) {
+	.browser-host iframe {
+		position: absolute;
+		inset: 0;
 		width: 100%;
 		height: 100%;
 		border: 0;
 		display: block;
+	}
+
+	.browser-host iframe.hidden {
+		display: none;
 	}
 
 	.dragging {
