@@ -6,7 +6,7 @@ dockerfile_path: "./Dockerfile"
 working_directory: "/"
 build_context_directory: "/"
 
-start_command: "npm start"
+start_command: ""
 
 health_check:
   type: http
