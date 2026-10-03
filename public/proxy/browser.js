@@ -4,8 +4,6 @@ const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const SITE_ROOT = new URL("../", location.href);
 
-const COOKIE_DB = "__scramjet_controller";
-const COOKIE_STORE = "state";
 
 function normalizeUrl(value) {
 	const trimmed = String(value || "").trim();
@@ -35,67 +33,6 @@ function showError(error) {
 		"white-space:pre-wrap;overflow:auto;";
 
 	document.body.appendChild(box);
-}
-
-function ensureScramjetDatabase() {
-	return new Promise((resolve, reject) => {
-		const request = indexedDB.open(COOKIE_DB);
-
-		request.onerror = () => {
-			reject(request.error || new Error("Could not open Scramjet IndexedDB."));
-		};
-
-		request.onupgradeneeded = () => {
-			const db = request.result;
-
-			if (!db.objectStoreNames.contains(COOKIE_STORE)) {
-				db.createObjectStore(COOKIE_STORE);
-			}
-		};
-
-		request.onsuccess = () => {
-			const db = request.result;
-
-			if (db.objectStoreNames.contains(COOKIE_STORE)) {
-				db.close();
-				resolve();
-				return;
-			}
-
-			const nextVersion = db.version + 1;
-			db.close();
-
-			const upgrade = indexedDB.open(COOKIE_DB, nextVersion);
-
-			upgrade.onerror = () => {
-				reject(
-					upgrade.error ||
-						new Error("Could not repair the Scramjet IndexedDB schema."),
-				);
-			};
-
-			upgrade.onblocked = () => {
-				reject(
-					new Error(
-						"Scramjet storage is locked by another tab. Close other proxy tabs and reload.",
-					),
-				);
-			};
-
-			upgrade.onupgradeneeded = () => {
-				const repaired = upgrade.result;
-
-				if (!repaired.objectStoreNames.contains(COOKIE_STORE)) {
-					repaired.createObjectStore(COOKIE_STORE);
-				}
-			};
-
-			upgrade.onsuccess = () => {
-				upgrade.result.close();
-				resolve();
-			};
-		};
-	});
 }
 
 async function registerProxyServiceWorker() {
@@ -147,8 +84,7 @@ async function configureTransport() {
 
 	// Both transports are published as browser ESM bundles. Use the exact
 	// 2.x transport version compatible with the Scramjet 1.1 / bare-mux 2 setup.
-	const epoxyUrl =
-		"https://unpkg.com/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+	const epoxyUrl = new URL("../epoxy/index.mjs", SITE_ROOT).href;
 
 	const libcurlUrl =
 		"https://unpkg.com/@mercuryworkshop/libcurl-transport@1.5.2/dist/index.mjs";
@@ -166,8 +102,6 @@ async function configureTransport() {
 }
 
 async function createScramjetController() {
-	await ensureScramjetDatabase();
-
 	const { ScramjetController } = $scramjetLoadController();
 
 	const controller = new ScramjetController({
@@ -178,7 +112,7 @@ async function createScramjetController() {
 		},
 	});
 
-	controller.init();
+	await controller.init();
 	return controller;
 }
 
