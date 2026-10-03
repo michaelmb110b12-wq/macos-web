@@ -41,7 +41,7 @@
 
 	function iframeSrc(tab: Tab) {
 		if (isLocalUrl(tab.srcUrl)) return tab.srcUrl;
-		return `/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`;
+		return `${proxyEntry}?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`;
 	}
 
 	function sendToTab(type: string, url?: string) {
