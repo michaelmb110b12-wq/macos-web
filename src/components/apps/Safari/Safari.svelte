@@ -18,8 +18,16 @@
 		const handler = (e: MessageEvent) => {
 			if (e.origin === location.origin && e.data?.type === 'proxy-urlchange') address = e.data.url;
 		};
+		const launchHandler = (e: Event) => {
+			const url = (e as CustomEvent<string>).detail;
+			if (url) navigate(url);
+		};
 		window.addEventListener('message', handler);
-		return () => window.removeEventListener('message', handler);
+		window.addEventListener('proxy-navigate', launchHandler);
+		return () => {
+			window.removeEventListener('message', handler);
+			window.removeEventListener('proxy-navigate', launchHandler);
+		};
 	});
 </script>
 
