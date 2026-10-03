@@ -2,9 +2,6 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-
 COPY package.json pnpm-lock.yaml ./
 
 RUN corepack enable \
@@ -13,7 +10,10 @@ RUN corepack enable \
 
 COPY . .
 
-RUN pnpm run build
+RUN pnpm run build \
+    && pnpm prune --prod
+
+ENV NODE_ENV=production
 
 EXPOSE 8080
 
