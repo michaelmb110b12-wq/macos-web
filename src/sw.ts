@@ -22,6 +22,7 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+	event.stopImmediatePropagation();
 	event.respondWith((async () => {
 		await scramjet.loadConfig();
 		if (scramjet.route(event)) return scramjet.fetch(event);
