@@ -84,8 +84,6 @@
 			minimized_transform = windowEl.style.transform || 'none';
 			windowEl.style.transform = 'translate(0px, 0px)';
 
-			// Match the original macOS Web maximize behavior. Keep the
-			// top menu bar visible and fill the remaining desktop area.
 			windowEl.style.width = '100%';
 			windowEl.style.height = 'calc(100vh - 1.7rem)';
 		} else {
@@ -168,7 +166,7 @@
 
 		position: absolute;
 
-		will-change: left, top, width, height, transform;
+		will-change: width, height;
 
 		border-radius: 0.75rem;
 		box-shadow: var(--elevated-shadow);
