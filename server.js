@@ -12,6 +12,7 @@ import { epoxyPath } from '@mercuryworkshop/epoxy-transport';
 import { baremuxPath } from '@mercuryworkshop/bare-mux/node';
 
 const distPath = fileURLToPath(new URL('./dist/', import.meta.url));
+const rootIndexPath = fileURLToPath(new URL('./dist/index.html', import.meta.url));
 const proxyPath = fileURLToPath(new URL('./public/proxy/', import.meta.url));
 
 logging.set_level(logging.NONE);
