@@ -3,10 +3,10 @@ build:
   command: ""
 
 dockerfile_path: "./Dockerfile"
-working_directory: "/"
+working_directory: "/app"
 build_context_directory: "/"
 
-start_command: ""
+start_command: "node server.js"
 
 health_check:
   type: http
