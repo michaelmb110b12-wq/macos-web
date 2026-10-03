@@ -5,9 +5,9 @@
 	const gnMathUrl = '/app-icons/gnmath.svg';
 
 	function openInSafari(url: string) {
+		apps.pending_navigation = new URL(url, location.origin).href;
 		apps.open.safari = true;
 		apps.active = 'safari';
-		window.dispatchEvent(new CustomEvent('proxy-navigate', { detail: url }));
 	}
 </script>
 
