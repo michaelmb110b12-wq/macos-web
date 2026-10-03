@@ -4,7 +4,9 @@
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
-	const proxyEntry = new URL('proxy/index.html', new URL(import.meta.env.BASE_URL, location.origin)).href;
+	const siteBase = new URL(import.meta.env.BASE_URL, location.origin);
+	const proxyEntry = new URL('proxy/index.html', siteBase).href;
+	const browserHome = new URL('blueberry_mac_os_banner.html', siteBase).href;
 
 	type Tab = {
 		id: number;
@@ -14,11 +16,11 @@
 	};
 
 	let tabs = $state<Tab[]>([
-		{ id: 1, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' },
+		{ id: 1, title: 'Blueberry Mac OS', url: browserHome, srcUrl: browserHome },
 	]);
 	let activeTabId = $state(1);
 	let nextTabId = 2;
-	let address = $state('about:blank');
+	let address = $state(browserHome);
 
 	function activeTab() {
 		return tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
@@ -101,15 +103,15 @@
 		const id = nextTabId++;
 		tabs = [
 			...tabs,
-			{ id, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' },
+			{ id, title: 'Blueberry Mac OS', url: browserHome, srcUrl: browserHome },
 		];
 		activeTabId = id;
-		address = 'about:blank';
+		address = browserHome;
 	}
 
 	function closeTab(id: number) {
 		if (tabs.length === 1) {
-			tabs = [{ id: 1, title: 'New Tab', url: 'about:blank', srcUrl: 'about:blank' }];
+			tabs = [{ id: 1, title: 'Blueberry Mac OS', url: browserHome, srcUrl: browserHome }];
 			activeTabId = 1;
 			nextTabId = Math.max(nextTabId, 2);
 			return;
