@@ -40,6 +40,10 @@ const fastify = Fastify({
 			}),
 });
 
+fastify.get('/', async (_request, reply) => {
+	return reply.sendFile('index.html');
+});
+
 await fastify.register(fastifyStatic, {
 	root: proxyPath,
 	prefix: '/proxy/',
@@ -78,13 +82,6 @@ await fastify.register(fastifyStatic, {
 });
 
 fastify.get('/health', async () => ({ ok: true }));
-
-// Explicitly serve the built Vite entrypoint at the root.
-// This avoids relying on @fastify/static's automatic directory-index behavior.
-fastify.get('/', async (_request, reply) => {
-	return reply.sendFile('index.html');
-});
-
 
 fastify.get('/proxy', async (_request, reply) => {
 	return reply.redirect('/proxy/');
