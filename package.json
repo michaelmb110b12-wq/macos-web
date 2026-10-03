@@ -40,7 +40,8 @@
 		"fastify": "^5.7.4",
 		"date-fns": "^4.4.0",
 		"popmotion": "^11.0.5",
-		"unplugin-icons": "^23.0.1"
+		"unplugin-icons": "^23.0.1",
+		"@mercuryworkshop/libcurl-transport": "^1.5.2"
 	},
 	"packageManager": "npm@10.9.2",
 	"engines": {
