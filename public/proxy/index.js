@@ -54,20 +54,11 @@ async function registerProxyServiceWorker() {
 	});
 
 	await registration.update();
-	await navigator.serviceWorker.ready;
 
-	const controller = navigator.serviceWorker.controller?.scriptURL || "";
-	if (controller === serviceWorkerUrl) {
-		return true;
-	}
-
-	if (sessionStorage.getItem("__proxy_worker_reload") !== "1") {
-		sessionStorage.setItem("__proxy_worker_reload", "1");
-		location.reload();
-		return false;
-	}
-
-	throw new Error("The Scramjet proxy service worker could not take control of /proxy/.");
+	// The proxy page may still be controlled by the site's root PWA worker.
+	// That is fine: the /proxy/ worker will take over requests for the
+	// rewritten URLs because it has the more-specific /proxy/ scope.
+	return registration;
 }
 
 async function configureTransport() {
@@ -94,7 +85,9 @@ async function createScramjetController() {
 	const { ScramjetController } = globalThis.$scramjetLoadController();
 
 	const controller = new ScramjetController({
-		prefix: new URL("proxy/scramjet/", SITE_ROOT).pathname,
+		// The proxy worker is scoped to /proxy/, so keep Scramjet's
+		// rewritten URLs in that exact scope.
+		prefix: new URL("./", location.href).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
@@ -108,19 +101,19 @@ async function createScramjetController() {
 
 async function start() {
 	try {
-		const controlled = await registerProxyServiceWorker();
-		if (!controlled) return;
+		await registerProxyServiceWorker();
 
 		const scramjet = await createScramjetController();
 		await configureTransport();
 
-		const frame = scramjet.createFrame();
-		frame.frame.id = "sj-frame";
-		frame.frame.style.cssText =
+		const iframe = document.createElement("iframe");
+		iframe.id = "sj-frame";
+		iframe.style.cssText =
 			"position:absolute;inset:0;width:100%;height:100%;" +
 			"border:0;margin:0;padding:0;display:block;background:#fff;";
+		document.body.appendChild(iframe);
 
-		document.body.appendChild(frame.frame);
+		const frame = scramjet.createFrame(iframe);
 
 		const postUrl = (url) => {
 			if (window.parent !== window) {
