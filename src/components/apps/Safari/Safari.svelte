@@ -31,12 +31,34 @@
 		return `https://${trimmed}`;
 	}
 
+	function isLocalUrl(url: string) {
+		try {
+			return new URL(url, location.href).origin === location.origin;
+		} catch {
+			return false;
+		}
+	}
+
+	function iframeSrc(tab: Tab) {
+		if (isLocalUrl(tab.srcUrl)) return tab.srcUrl;
+		return `/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`;
+	}
+
 	function sendToTab(type: string, url?: string) {
 		const iframe = document.querySelector(
 			`iframe[data-proxy-tab="${activeTabId}"]`,
 		) as HTMLIFrameElement | null;
 
-		if (!iframe?.contentWindow) return;
+		if (!iframe) return;
+
+		if (type === 'reload' && isLocalUrl(activeTab()?.srcUrl ?? '')) {
+			try {
+				iframe.contentWindow?.location.reload();
+			} catch {}
+			return;
+		}
+
+		if (!iframe.contentWindow) return;
 
 		iframe.contentWindow.postMessage(
 			url ? { type, url } : { type },
@@ -209,7 +231,7 @@
 	<div class="browser-host">
 		{#each tabs as tab}
 			<iframe
-				src={`/proxy/index.html?tab=${tab.id}&url=${encodeURIComponent(tab.srcUrl)}`}
+				src={iframeSrc(tab)}
 				data-proxy-tab={tab.id}
 				title={tab.title}
 				class:hidden={tab.id !== activeTabId}
