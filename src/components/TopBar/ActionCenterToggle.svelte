@@ -9,6 +9,8 @@
 	import SystemDialog from '../SystemUI/SystemDialog.svelte';
 	import ActionCenter from './ActionCenter.svelte';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	let visible = $state(false);
 	let theme_warning_dialog: SystemDialog;
 
@@ -52,7 +54,7 @@
 	on_close={() => (is_theme_warning_dialog_open = false)}
 >
 	<section class="theme-warning-section">
-		<img height="100" width="100" src="/app-icons/wallpapers/256.webp" alt="Wallpapers app logo" />
+		<img height="100" width="100" src={assetBase + 'app-icons/wallpapers/256.webp'} alt="Wallpapers app logo" />
 
 		<h3>Current Wallpaper Settings prevent changing theme</h3>
 		<p>Head over to Wallpapers app to change this setting or choose a standalone wallpaper.</p>
