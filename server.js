@@ -49,6 +49,7 @@ await fastify.register(fastifyStatic, {
 
 await fastify.register(fastifyStatic, {
 	root: distPath,
+	index: false,
 	decorateReply: true,
 });
 
@@ -84,30 +85,6 @@ fastify.get('/', async (_request, reply) => {
 	return reply.sendFile('index.html');
 });
 
-// Vite SPA fallback for client-side routes.
-fastify.get('/*', async (_request, reply) => {
-	const url = _request.raw.url ?? '/';
-
-	if (
-		url.startsWith('/assets/') ||
-		url.startsWith('/app-icons/') ||
-		url.startsWith('/emojis/') ||
-		url.startsWith('/cursors/') ||
-		url.startsWith('/sounds/') ||
-		url.startsWith('/proxy/') ||
-		url.startsWith('/scram/') ||
-		url.startsWith('/epoxy/') ||
-		url.startsWith('/libcurl/') ||
-		url.startsWith('/baremux/') ||
-		url === '/sw.js' ||
-		url === '/manifest.webmanifest' ||
-		url === '/robots.txt'
-	) {
-		return reply.code(404).send();
-	}
-
-	return reply.sendFile('index.html');
-});
 
 fastify.get('/proxy', async (_request, reply) => {
 	return reply.redirect('/proxy/');
