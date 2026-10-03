@@ -7,7 +7,7 @@
 	function openInSafari(url: string) {
 		apps.open.safari = true;
 		apps.active = 'safari';
-		window.dispatchEvent(new CustomEvent('proxy-navigate', { detail: url }));
+		setTimeout(() => window.dispatchEvent(new CustomEvent('proxy-navigate', { detail: url })), 150);
 	}
 </script>
 
