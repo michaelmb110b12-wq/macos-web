@@ -1,49 +1,66 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get('url') || 'about:blank';
 
-async function prepareServiceWorker() {
-	// Older builds registered a separate /proxy/ service worker. Remove it so
-	// Scramjet uses the same root service worker as the original macOS app.
-	const registrations = await navigator.serviceWorker.getRegistrations();
-	for (const registration of registrations) {
-		const scriptUrl = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL || '';
-		if (new URL(scriptUrl || location.href).pathname === '/proxy/sw.js') {
+async function startProxy() {
+	if (!navigator.serviceWorker) {
+		throw new Error('Service workers are unavailable.');
+	}
+
+	// Remove stale root/proxy registrations created by previous builds.
+	for (const registration of await navigator.serviceWorker.getRegistrations()) {
+		const scriptUrl =
+			registration.active?.scriptURL ||
+			registration.installing?.scriptURL ||
+			registration.waiting?.scriptURL ||
+			'';
+
+		if (!scriptUrl) continue;
+
+		const pathname = new URL(scriptUrl, location.href).pathname;
+		if (pathname === '/sw.js' || pathname === '/proxy/sw.js') {
+			if (pathname === '/sw.js') {
+				// Leave the original macOS PWA registration alone.
+				continue;
+			}
 			await registration.unregister();
 		}
 	}
 
-	const registration =
-		(await navigator.serviceWorker.getRegistration('/')) ||
-		(await navigator.serviceWorker.register('/sw.js', {
-			scope: '/',
-			updateViaCache: 'none',
-		}));
+	const registration = await navigator.serviceWorker.register('/proxy/sw.js', {
+		scope: '/proxy/',
+		updateViaCache: 'none',
+	});
 
 	await registration.update();
-	await navigator.serviceWorker.ready;
 
-	// clientsClaim() in the root service worker should normally control us.
-	// On the very first visit the browser may need one reload to attach it.
 	if (!navigator.serviceWorker.controller) {
 		await new Promise((resolve, reject) => {
 			const timeout = window.setTimeout(
-				() => reject(new Error('Scramjet service worker did not take control.')),
+				() => reject(new Error('Scramjet proxy service worker did not take control.')),
 				15000,
 			);
+
+			const onControllerChange = () => {
+				window.clearTimeout(timeout);
+				navigator.serviceWorker.removeEventListener(
+					'controllerchange',
+					onControllerChange,
+				);
+				resolve();
+			};
+
 			navigator.serviceWorker.addEventListener(
 				'controllerchange',
-				() => {
-					window.clearTimeout(timeout);
-					resolve();
-				},
+				onControllerChange,
 				{ once: true },
 			);
 		});
 	}
-	return Boolean(navigator.serviceWorker.controller);
-}
 
-if (await prepareServiceWorker()) {
+	if (!navigator.serviceWorker.controller) {
+		throw new Error('Scramjet proxy service worker is not controlling this page.');
+	}
+
 	const { ScramjetController } = $scramjetLoadController();
 
 	const scramjet = new ScramjetController({
@@ -63,16 +80,16 @@ if (await prepareServiceWorker()) {
 		location.host +
 		'/wisp/';
 
-	// Match the MercuryWorkshop Scramjet-App transport setup.
 	await connection.setTransport('/libcurl/index.mjs', [{ websocket: wispUrl }]);
 
 	const frame = scramjet.createFrame();
 	const element = frame.frame;
-	document.body.appendChild(element);
 
 	element.id = 'scramjet-frame';
 	element.style.cssText =
 		'position:absolute;inset:0;width:100%;height:100%;border:0;margin:0;padding:0;display:block;background:#fff;';
+
+	document.body.appendChild(element);
 
 	let current = initialUrl;
 
@@ -112,3 +129,22 @@ if (await prepareServiceWorker()) {
 		go(current);
 	}
 }
+
+startProxy().catch((error) => {
+	console.error('[proxy] startup failed', error);
+
+	const pre = document.createElement('pre');
+	pre.textContent =
+		'Proxy failed: ' +
+		(error instanceof Error ? error.message : String(error));
+	pre.style.cssText =
+		'position:absolute;inset:0;margin:0;padding:24px;white-space:pre-wrap;font:14px/1.5 monospace;background:#fff;color:#b00020;overflow:auto;';
+	document.body.appendChild(pre);
+
+	if (window.parent !== window) {
+		window.parent.postMessage(
+			{ type: 'proxy-error', error: pre.textContent },
+			location.origin,
+		);
+	}
+});
