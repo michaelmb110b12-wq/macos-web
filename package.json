@@ -4,8 +4,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "vite build --configLoader runner",
 		"serve": "vite preview",
+		"start": "node server.js",
 		"check": "svelte-check --tsconfig ./tsconfig.json"
 	},
 	"devDependencies": {
@@ -31,6 +32,12 @@
 		"@fontsource/inter": "^5.2.8",
 		"@neodrag/core": "3.0.0-next.8",
 		"@neodrag/svelte": "3.0.0-next.8",
+		"@mercuryworkshop/bare-mux": "^2.1.9",
+		"@mercuryworkshop/epoxy-transport": "2.1.28",
+		"@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz",
+		"@mercuryworkshop/wisp-js": "^0.4.1",
+		"@fastify/static": "^9.0.0",
+		"fastify": "^5.7.4",
 		"date-fns": "^4.4.0",
 		"popmotion": "^11.0.5",
 		"unplugin-icons": "^23.0.1"
