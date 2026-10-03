@@ -147,8 +147,7 @@ async function configureTransport() {
 
 	// Both transports are published as browser ESM bundles. Use the exact
 	// 2.x transport version compatible with the Scramjet 1.1 / bare-mux 2 setup.
-	const epoxyUrl =
-		"https://unpkg.com/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs";
+	const epoxyUrl = new URL("../epoxy/index.mjs", SITE_ROOT).href;
 
 	const libcurlUrl =
 		"https://unpkg.com/@mercuryworkshop/libcurl-transport@1.5.2/dist/index.mjs";
