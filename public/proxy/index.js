@@ -3,6 +3,8 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const SITE_ROOT = new URL("../", location.href);
+const IS_BUNNY_CDN = /\\.b-cdn\\.net$/i.test(location.hostname);
+const SW_VERSION = "20261003-bunny-v1";
 
 
 function normalizeUrl(value) {
@@ -40,7 +42,9 @@ async function registerProxyServiceWorker() {
 		throw new Error("Your browser does not support service workers.");
 	}
 
-	const serviceWorkerUrl = new URL("scramjet/sw.js", SITE_ROOT).href;
+	const serviceWorkerUrlObject = new URL("scramjet/sw.js", SITE_ROOT);
+	if (IS_BUNNY_CDN) serviceWorkerUrlObject.search = "?v=" + SW_VERSION;
+	const serviceWorkerUrl = serviceWorkerUrlObject.href;
 	const serviceWorkerScope = new URL("scramjet/", SITE_ROOT).pathname;
 
 	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
@@ -76,6 +80,7 @@ async function registerProxyServiceWorker() {
 	return true;
 }
 const DEFAULT_WISP_URL = "wss://anura.pro/";
+const BUNNY_WISP_URL = "wss://wisp.mercurywork.shop/";
 
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
@@ -84,8 +89,9 @@ function getWispUrl() {
 	// stale saved endpoint; the static Scramjet reference uses Anura's Wisp
 	// endpoint and its docs expose it as a Wisp-compatible backend.
 	if (!configured || /hostless\.app/i.test(configured)) {
-		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
-		return DEFAULT_WISP_URL;
+		const fallback = IS_BUNNY_CDN ? BUNNY_WISP_URL : DEFAULT_WISP_URL;
+		localStorage.setItem("wispUrl", fallback);
+		return fallback;
 	}
 
 	return configured;
