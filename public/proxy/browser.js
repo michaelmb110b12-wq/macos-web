@@ -57,8 +57,13 @@ if (await prepareServiceWorker()) {
 		location.host +
 		'/wisp/';
 
-	// Epoxy is the primary transport used by this build.
-	await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
+	// Epoxy is the primary transport. Fall back to libcurl if Epoxy cannot initialize.
+	try {
+		await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
+	} catch (error) {
+		console.warn('[proxy] Epoxy failed, falling back to libcurl:', error);
+		await connection.setTransport('/libcurl/index.mjs', [{ websocket: wispUrl }]);
+	}
 
 	const frame = scramjet.createFrame();
 	const element = frame.frame;
