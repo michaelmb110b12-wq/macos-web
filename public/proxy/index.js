@@ -87,7 +87,7 @@ async function createScramjetController() {
 	const controller = new ScramjetController({
 		// The proxy worker is scoped to /proxy/, so keep Scramjet's
 		// rewritten URLs in that exact scope.
-		prefix: new URL("./", location.href).pathname,
+		prefix: new URL("scramjet/", SITE_ROOT).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
