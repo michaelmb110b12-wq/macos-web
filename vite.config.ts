@@ -16,6 +16,7 @@ export default defineConfig({
 
 		VitePWA({
 			strategies: 'injectManifest',
+			registerType: 'autoUpdate',
 			srcDir: 'src',
 			filename: 'sw.ts',
 			includeAssets: ['robots.txt','app-icons/finder/32.png','cover-image.png','cursors/(normal|link|text|help)-select.svg','**/*.mp3'],
