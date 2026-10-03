@@ -167,12 +167,10 @@
 
 	onMount(() => {
 		window.addEventListener('message', handleMessage);
-		window.addEventListener('proxy-navigate', handleGamesNavigation);
 	});
 
 	onDestroy(() => {
 		window.removeEventListener('message', handleMessage);
-		window.removeEventListener('proxy-navigate', handleGamesNavigation);
 	});
 </script>
 
