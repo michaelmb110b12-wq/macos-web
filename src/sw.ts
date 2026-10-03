@@ -12,7 +12,7 @@ const scramjet = new ScramjetServiceWorker();
 
 const serwist = new Serwist({
 	precacheEntries: self.__WB_MANIFEST,
-	skipWaiting: false,
+	skipWaiting: true,
 	clientsClaim: true,
 	navigationPreload: true,
 });
