@@ -1,18 +1,18 @@
-FROM node:22-bookworm-slim
+FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package.json ./
-
-RUN npm install --include=dev --no-audit --no-fund
-
+# Copy the source before installing so the builder only needs to snapshot
+# the filesystem once after the install/build/prune sequence.
 COPY . .
 
-RUN npm run build \
-	&& npm prune --omit=dev
+RUN npm install --include=dev --no-audit --no-fund \
+	&& npm run build \
+	&& npm prune --omit=dev \
+	&& npm cache clean --force
 
 ENV NODE_ENV=production
 
 EXPOSE 8080
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
