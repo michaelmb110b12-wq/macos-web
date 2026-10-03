@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { apps } from '🍎/state/apps.svelte.ts';
 
 	const { is_being_dragged }: { is_being_dragged: boolean } = $props();
 
@@ -24,8 +25,10 @@
 	function normalizeUrl(value: string) {
 		const trimmed = value.trim();
 		if (!trimmed) return '';
-
-		return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+		if (/^about:/i.test(trimmed)) return trimmed;
+		if (/^https?:\/\//i.test(trimmed)) return trimmed;
+		if (trimmed.startsWith('/')) return new URL(trimmed, location.origin).href;
+		return `https://${trimmed}`;
 	}
 
 	function sendToTab(type: string, url?: string) {
@@ -58,7 +61,6 @@
 			}
 		}
 
-		sendToTab('navigate', target);
 	}
 
 	function reload() {
