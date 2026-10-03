@@ -2,16 +2,14 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
-RUN corepack enable \
-    && corepack prepare pnpm@10.18.3 --activate \
-    && pnpm install --frozen-lockfile
+RUN npm install --include=dev --no-audit --no-fund
 
 COPY . .
 
-RUN pnpm run build \
-    && pnpm prune --prod
+RUN npm run build \
+	&& npm prune --omit=dev
 
 ENV NODE_ENV=production
 
