@@ -49,30 +49,32 @@ async function registerProxyServiceWorker() {
 	});
 
 	await registration.update();
-	await navigator.serviceWorker.ready;
 
-	const expectedController = new URL("scramjet/sw.js", SITE_ROOT).href;
-	const currentController =
-		navigator.serviceWorker.controller?.scriptURL || "";
+	// The proxy page itself is outside /scramjet/, so it will normally be
+	// controlled by the site's root PWA worker. That is expected. We only
+	// need the dedicated Scramjet worker to activate for /scramjet/ URLs.
+	if (!registration.active) {
+		await new Promise((resolve, reject) => {
+			const timeout = setTimeout(
+				() => reject(new Error("The Scramjet service worker did not activate in time.")),
+				10000,
+			);
 
-	if (currentController === expectedController) {
-		sessionStorage.removeItem("__macos_proxy_scope_reload");
-		return true;
+			const check = () => {
+				if (registration.active) {
+					clearTimeout(timeout);
+					resolve();
+				}
+			};
+
+			registration.addEventListener("updatefound", check, { once: false });
+			registration.addEventListener("statechange", check, { once: false });
+			check();
+		});
 	}
 
-	// A previous root PWA worker can still control the document. One reload
-	// lets the newly-active /proxy/ worker become the controller.
-	if (sessionStorage.getItem("__macos_proxy_scope_reload") !== "1") {
-		sessionStorage.setItem("__macos_proxy_scope_reload", "1");
-		location.reload();
-		return false;
-	}
-
-	throw new Error(
-		"The /proxy/ service worker is installed but this tab is still controlled by another worker.",
-	);
+	return true;
 }
-
 const DEFAULT_WISP_URL = "wss://wisp-scramjet-mac.hostless.app/wisp/";
 
 function getWispUrl() {
