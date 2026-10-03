@@ -7,6 +7,8 @@
 	import { fade_out } from '🍎/helpers/fade.ts';
 	import { sleep } from '🍎/helpers/sleep';
 
+	const assetBase = import.meta.env.BASE_URL;
+
 	let hidden_splash_screen = $state(false);
 	let progress_val = tweened(100, { duration: 3000, easing: quintInOut });
 
@@ -36,7 +38,7 @@
 
 <!-- iframe => firefox support: will always make sound available on start or F5 -->
 {#if import.meta.env.PROD}
-	<iframe id="audio" src="/sounds/mac-startup-sound.mp3" allow="autoplay" title="hello"></iframe>
+	<iframe id="audio" src={assetBase + 'sounds/mac-startup-sound.mp3'} allow="autoplay" title="hello"></iframe>
 {/if}
 
 <style>
