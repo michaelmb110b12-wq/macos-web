@@ -2,7 +2,7 @@
 	import { apps } from '🍎/state/apps.svelte.ts';
 
 	const cloudUrl = 'https://figure-cloud-cine.b-cdn.net/';
-	const gnMathUrl = '/gnmath/index.html';
+	const gnMathUrl = 'https://michaelmb110b12-wq.github.io/macos-web/gnmath/index.html';
 
 	function openInSafari(url: string) {
 		apps.pending_navigation = new URL(url, location.origin).href;
