@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build --configLoader runner",
+		"build": "vite build --configLoader native",
 		"serve": "vite preview",
 		"start": "node server.js",
 		"check": "svelte-check --tsconfig ./tsconfig.json"
@@ -41,6 +41,5 @@
 		"date-fns": "^4.4.0",
 		"popmotion": "^11.0.5",
 		"unplugin-icons": "^23.0.1"
-	},
-	"packageManager": "pnpm@10.12.3"
+	}
 }
