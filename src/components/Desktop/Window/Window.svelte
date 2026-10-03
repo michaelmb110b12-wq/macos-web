@@ -107,6 +107,11 @@
 		apps.fullscreen[app_id] = false;
 	}
 
+	function minimizeApp() {
+		apps.open[app_id] = false;
+		apps.fullscreen[app_id] = false;
+	}
+
 	function onAppDragStart() {
 		focusApp();
 		apps.is_being_dragged = true;
@@ -142,7 +147,7 @@
 	out:windowCloseTransition
 >
 	<div class="tl-container {app_id}" use:elevation={'window-traffic-lights'}>
-		<TrafficLights {app_id} on_maximize_click={maximizeApp} on_close_app={closeApp} />
+		<TrafficLights {app_id} on_maximize_click={maximizeApp} on_minimize_click={minimizeApp} on_close_app={closeApp} />
 	</div>
 
 	<AppNexus {app_id} is_being_dragged={apps.is_being_dragged} />
