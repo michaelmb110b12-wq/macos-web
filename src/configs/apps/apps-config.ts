@@ -46,11 +46,10 @@ const appstore = create_app_config({
 	resizable: true,
 });
 
-const viewSource = create_app_config({
-	title: 'View Source',
+const linuxVm = create_app_config({
+	title: 'Linux VM',
 	resizable: true,
 	should_open_window: false,
-	external_action: () => window.open('https://github.com/puruvj/macos-web', '_blank'),
 });
 
 export const apps_config = {
@@ -61,5 +60,5 @@ export const apps_config = {
 	games,
 	safari,
 	appstore,
-	'view-source': viewSource,
+	'view-source': linuxVm,
 };
