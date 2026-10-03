@@ -7,7 +7,7 @@
 	// Resolve the app root from the actual page URL so both GitHub Pages
 	// (/macos-web/) and Bunny/custom-domain roots (/) work with base: './'.
 	const siteBase = new URL('./', location.href);
-	const proxyEntry = new URL('proxy/index.html', siteBase).href;
+	const proxyEntry = new URL('scramjet/index.html', siteBase).href;
 	const browserHome = new URL('blueberry_mac_os_banner.html', siteBase).href;
 
 	type Tab = {
