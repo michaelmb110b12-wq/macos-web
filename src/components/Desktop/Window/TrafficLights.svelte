@@ -22,7 +22,10 @@
 	<button type="button" class="close-light" onclick={(event) => { event.stopPropagation(); on_close_app(); }} aria-label="Close window"> <CloseIcon /> </button>
 	<button type="button" class="minimize-light" onclick={(event) => { event.stopPropagation(); on_minimize_click(); }} aria-label="Minimize window"> <MinimizeSvg /> </button>
 	<button type="button" class="stretch-light" onclick={(event) => { event.stopPropagation(); on_maximize_click(); }} aria-label="Maximize window">
-		<GreenLight expandable={apps_config[app_id].expandable} />
+		<GreenLight
+			expandable={apps_config[app_id].expandable}
+			maximized={apps.fullscreen[app_id]}
+		/>
 	</button>
 </div>
 
