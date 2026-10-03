@@ -25,16 +25,22 @@ async function prepareServiceWorker() {
 	// clientsClaim() in the root service worker should normally control us.
 	// On the very first visit the browser may need one reload to attach it.
 	if (!navigator.serviceWorker.controller) {
-		if (sessionStorage.getItem('macos-proxy-sw-reloaded') !== '1') {
-			sessionStorage.setItem('macos-proxy-sw-reloaded', '1');
-			location.reload();
-			return false;
-		}
-		throw new Error('The root Scramjet service worker is not controlling this page.');
+		await new Promise((resolve, reject) => {
+			const timeout = window.setTimeout(
+				() => reject(new Error('Scramjet service worker did not take control.')),
+				15000,
+			);
+			navigator.serviceWorker.addEventListener(
+				'controllerchange',
+				() => {
+					window.clearTimeout(timeout);
+					resolve();
+				},
+				{ once: true },
+			);
+		});
 	}
-
-	sessionStorage.removeItem('macos-proxy-sw-reloaded');
-	return true;
+	return Boolean(navigator.serviceWorker.controller);
 }
 
 if (await prepareServiceWorker()) {
@@ -57,13 +63,8 @@ if (await prepareServiceWorker()) {
 		location.host +
 		'/wisp/';
 
-	// Epoxy is the primary transport. Fall back to libcurl if Epoxy cannot initialize.
-	try {
-		await connection.setTransport('/epoxy/index.mjs', [{ wisp: wispUrl }]);
-	} catch (error) {
-		console.warn('[proxy] Epoxy failed, falling back to libcurl:', error);
-		await connection.setTransport('/libcurl/index.mjs', [{ websocket: wispUrl }]);
-	}
+	// Match the MercuryWorkshop Scramjet-App transport setup.
+	await connection.setTransport('/libcurl/index.mjs', [{ websocket: wispUrl }]);
 
 	const frame = scramjet.createFrame();
 	const element = frame.frame;
