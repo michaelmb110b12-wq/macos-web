@@ -94,7 +94,7 @@ async function createScramjetController() {
 	const { ScramjetController } = globalThis.$scramjetLoadController();
 
 	const controller = new ScramjetController({
-		prefix: new URL("scramjet/", SITE_ROOT).pathname,
+		prefix: new URL("proxy/scramjet/", SITE_ROOT).pathname,
 		files: {
 			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
 			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
