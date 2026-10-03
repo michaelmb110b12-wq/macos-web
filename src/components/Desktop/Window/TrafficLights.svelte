@@ -19,23 +19,23 @@
 </script>
 
 <div class="container" class:unfocused={apps.active !== app_id}>
-	<button class="close-light" onclick={on_close_app}> <CloseIcon /> </button>
-	<button class="minimize-light" onclick={on_minimize_click}> <MinimizeSvg /> </button>
-	<button class="stretch-light" onclick={on_maximize_click}>
+	<button type="button" class="close-light" onclick={(event) => { event.stopPropagation(); on_close_app(); }} aria-label="Close window"> <CloseIcon /> </button>
+	<button type="button" class="minimize-light" onclick={(event) => { event.stopPropagation(); on_minimize_click(); }} aria-label="Minimize window"> <MinimizeSvg /> </button>
+	<button type="button" class="stretch-light" onclick={(event) => { event.stopPropagation(); on_maximize_click(); }} aria-label="Maximize window">
 		<GreenLight expandable={apps_config[app_id].expandable} />
 	</button>
 </div>
 
 <style>
 	.container {
-		--button-size: 0.8rem;
+		--button-size: 0.85rem;
 
 		/* // pointer-events: none; */
 
 		display: grid;
 		grid-template-columns: repeat(3, var(--button-size));
 		align-items: center;
-		gap: 0.6rem;
+		gap: 0.55rem;
 
 		height: 100%;
 
@@ -62,6 +62,13 @@
 	button {
 		height: var(--button-size);
 		width: var(--button-size);
+		padding: 0;
+		margin: 0;
+		border: 0;
+		display: grid;
+		place-items: center;
+		position: relative;
+		z-index: 1;
 
 		/* // pointer-events: initial; */
 
