@@ -2,6 +2,7 @@
 
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
+const SITE_ROOT = new URL("../", location.href);
 
 const COOKIE_DB = "__scramjet_controller";
 const COOKIE_STORE = "state";
@@ -140,7 +141,7 @@ function getWispUrl() {
 }
 
 async function configureTransport() {
-	const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+	const connection = new BareMux.BareMuxConnection(new URL("baremux/worker.js", SITE_ROOT).href);
 
 	const wispUrl = getWispUrl();
 
@@ -171,9 +172,9 @@ async function createScramjetController() {
 
 	const controller = new ScramjetController({
 		files: {
-			wasm: "/scram/scramjet.wasm.wasm",
-			all: "/scram/scramjet.all.js",
-			sync: "/scram/scramjet.sync.js",
+			wasm: new URL("scram/scramjet.wasm.wasm", SITE_ROOT).pathname,
+			all: new URL("scram/scramjet.all.js", SITE_ROOT).pathname,
+			sync: new URL("scram/scramjet.sync.js", SITE_ROOT).pathname,
 		},
 	});
 
