@@ -49,7 +49,7 @@ await fastify.register(fastifyStatic, {
 
 await fastify.register(fastifyStatic, {
 	root: distPath,
-	index: false,
+	index: 'index.html',
 	decorateReply: true,
 });
 
