@@ -2,14 +2,10 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy the source before installing so the builder only needs to snapshot
-# the filesystem once after the install/build/prune sequence.
-COPY . .
+COPY wisp-service/package.json ./package.json
+RUN npm install --omit=dev --no-audit --no-fund
 
-RUN npm install --include=dev --no-audit --no-fund \
-	&& npm run build \
-	&& npm prune --omit=dev \
-	&& npm cache clean --force
+COPY wisp-service/server.js ./server.js
 
 ENV NODE_ENV=production
 
