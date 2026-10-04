@@ -170,7 +170,7 @@
 		{:else}
 			<img
 				bind:this={image_el}
-				src={assetBase + 'app-icons/' + app_id + '/256.webp'}
+				src={assetBase + 'app-icons/' + app_id + (app_id === 'safari' ? '/256.png' : '/256.webp')}
 				alt="{title} app"
 				style:width="{$width_px / 16}rem"
 				draggable="false"
