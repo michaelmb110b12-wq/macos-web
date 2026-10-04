@@ -3,8 +3,7 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const SITE_ROOT = new URL("../", location.href);
-const IS_BUNNY_CDN = /\.b-cdn\.net$/i.test(location.hostname);
-const SW_VERSION = "20261003-bunny-v2";
+const SW_VERSION = "20261003-bunny-v3";
 
 
 function normalizeUrl(value) {
@@ -43,7 +42,7 @@ async function registerProxyServiceWorker() {
 	}
 
 	const serviceWorkerUrlObject = new URL("scramjet/sw.js", SITE_ROOT);
-	if (IS_BUNNY_CDN) serviceWorkerUrlObject.search = "?v=" + SW_VERSION;
+	serviceWorkerUrlObject.search = "?v=" + SW_VERSION;
 	const serviceWorkerUrl = serviceWorkerUrlObject.href;
 	const serviceWorkerScope = new URL("scramjet/", SITE_ROOT).pathname;
 
@@ -80,23 +79,13 @@ async function registerProxyServiceWorker() {
 	return true;
 }
 const DEFAULT_WISP_URL = "wss://anura.pro/";
-const BUNNY_WISP_URL = "wss://wisp.mercurywork.shop/";
 
 function getWispUrl() {
-	// Bunny CDN uses the public Mercury Wisp endpoint. Force it here so a
-	// previously saved Wisp setting cannot keep the Bunny instance on an
-	// incompatible/stale endpoint.
-	if (IS_BUNNY_CDN) {
-		localStorage.setItem("wispUrl", BUNNY_WISP_URL);
-		return BUNNY_WISP_URL;
-	}
-
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
-	if (!configured || /hostless\.app/i.test(configured)) {
+	if (!configured || /hostless\\.app/i.test(configured)) {
 		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 		return DEFAULT_WISP_URL;
 	}
-
 	return configured;
 }
 
