@@ -54,9 +54,8 @@ async function getScramjet() {
 	await databaseReady;
 
 	if (!scramjetPromise) {
-		scramjetPromise = Promise.resolve(
-			new $scramjetLoadWorker().ScramjetServiceWorker(),
-		);
+		const { ScramjetServiceWorker } = $scramjetLoadWorker();
+		scramjetPromise = Promise.resolve(new ScramjetServiceWorker());
 	}
 
 	return scramjetPromise;
