@@ -12,7 +12,7 @@ const isBunnyCdn = /\.b-cdn\.net$/i.test(location.hostname);
 if (isBunnyCdn && 'serviceWorker' in navigator) {
 	// A previous Bunny deployment may already have the root PWA installed.
 	// Remove it so the dedicated /scramjet/ worker can own proxy requests.
-	const cleanupKey = '__bunny_root_pwa_cleanup_v4';
+	const cleanupKey = '__bunny_root_pwa_cleanup_v8';
 	if (sessionStorage.getItem(cleanupKey) !== '1') {
 		navigator.serviceWorker.getRegistrations().then(async (registrations) => {
 			const rootScope = new URL('./', location.href).href;
