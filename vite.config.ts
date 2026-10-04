@@ -6,7 +6,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { prefetch } from './prefetch-plugin';
 
 export default defineConfig({
-	base: process.env.GITHUB_ACTIONS === 'true' ? '/macos-web/' : '/',
+	// Use relative asset paths so the same Pages build also works when mirrored by Bunny CDN.
+	base: './',
 	plugins: [
 		svelte(),
 		prefetch(),
