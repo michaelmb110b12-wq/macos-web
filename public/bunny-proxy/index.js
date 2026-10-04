@@ -3,7 +3,7 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const ROOT = new URL("../", location.href);
-const SW_URL = new URL("scramjet/sw.js?v=20261003-bunny-v6", ROOT).href;
+const SW_URL = new URL("scramjet/sw.js?v=20261003-bunny-v7", ROOT).href;
 const SW_SCOPE = new URL("scramjet/", ROOT).pathname;
 
 function normalizeUrl(value) {
@@ -13,6 +13,41 @@ function normalizeUrl(value) {
 	if (/^https?:\/\//i.test(trimmed)) return trimmed;
 	if (trimmed.startsWith("/")) return new URL(trimmed, location.origin).href;
 	return "https://" + trimmed;
+}
+
+async function resetBrokenBunnyRuntime() {
+	const resetKey = "__bunny_scramjet_runtime_reset_v6";
+
+	if (sessionStorage.getItem(resetKey) === "1") return;
+
+	// Remove stale root service workers left by earlier Bunny deployments.
+	// The dedicated /scramjet/ worker is intentionally kept.
+	if ("serviceWorker" in navigator) {
+		const registrations = await navigator.serviceWorker.getRegistrations();
+		await Promise.all(
+			registrations
+				.filter((registration) => !registration.scope.endsWith("/scramjet/"))
+				.map((registration) => registration.unregister()),
+		);
+	}
+
+	// Older Bunny deployments could leave a partially-created $scramjet
+	// IndexedDB database behind. Scramjet 1.1 expects its complete schema
+	// (config, cookies, redirectTrackers, referrerPolicies, publicSuffixList).
+	await new Promise((resolve) => {
+		try {
+			const request = indexedDB.deleteDatabase("$scramjet");
+			request.onsuccess = resolve;
+			request.onerror = resolve;
+			request.onblocked = () => setTimeout(resolve, 250);
+		} catch {
+			resolve();
+		}
+	});
+
+	sessionStorage.setItem(resetKey, "1");
+	location.reload();
+	throw new Error("Reloading Bunny proxy after clearing stale Scramjet state.");
 }
 
 function showError(error) {
@@ -54,6 +89,7 @@ async function configureTransport() {
 
 async function start() {
 	try {
+		await resetBrokenBunnyRuntime();
 		await registerScramjetWorker();
 
 		const { ScramjetController } = $scramjetLoadController();
