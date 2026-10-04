@@ -3,7 +3,7 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const SITE_ROOT = new URL("../", location.href);
-const SW_VERSION = "20261003-bunny-v5";
+const SW_VERSION = "20261003-bunny-v6";
 
 
 function normalizeUrl(value) {
