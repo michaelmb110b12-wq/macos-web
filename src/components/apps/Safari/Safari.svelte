@@ -66,9 +66,14 @@
 
 		if (!iframe.contentWindow) return;
 
+		let targetOrigin = location.origin;
+		try {
+			targetOrigin = new URL(iframe.src, location.href).origin;
+		} catch {}
+
 		iframe.contentWindow.postMessage(
 			url ? { type, url } : { type },
-			location.origin,
+			targetOrigin,
 		);
 	}
 
@@ -156,7 +161,9 @@
 
 
 	function handleMessage(event: MessageEvent) {
-		if (event.origin !== location.origin) return;
+		const allowedProxyOrigin =
+			isBunnyCdn ? 'https://michaelmb110b12-wq.github.io' : location.origin;
+		if (event.origin !== location.origin && event.origin !== allowedProxyOrigin) return;
 
 		const data = event.data;
 		if (!data?.type) return;
