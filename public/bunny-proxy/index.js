@@ -3,7 +3,7 @@
 const params = new URLSearchParams(location.search);
 const initialUrl = params.get("url") || "about:blank";
 const ROOT = new URL("../", location.href);
-const SW_URL = new URL("scramjet/sw.js?v=20261003-bunny-v7", ROOT).href;
+const SW_URL = new URL("scramjet/sw.js?v=20261003-bunny-v8", ROOT).href;
 const SW_SCOPE = new URL("scramjet/", ROOT).pathname;
 
 function normalizeUrl(value) {
@@ -15,40 +15,86 @@ function normalizeUrl(value) {
 	return "https://" + trimmed;
 }
 
-async function resetBrokenBunnyRuntime() {
-	const resetKey = "__bunny_scramjet_runtime_reset_v6";
+async function prepareBunnyRuntime() {
+	const reloadKey = "__bunny_root_sw_cleanup_v8";
 
-	if (sessionStorage.getItem(resetKey) === "1") return;
-
-	// Remove stale root service workers left by earlier Bunny deployments.
-	// The dedicated /scramjet/ worker is intentionally kept.
 	if ("serviceWorker" in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
-		await Promise.all(
-			registrations
-				.filter((registration) => !registration.scope.endsWith("/scramjet/"))
-				.map((registration) => registration.unregister()),
+		const rootRegistrations = registrations.filter(
+			(registration) => !registration.scope.endsWith("/scramjet/"),
 		);
+
+		if (rootRegistrations.length) {
+			await Promise.all(
+				rootRegistrations.map((registration) => registration.unregister()),
+			);
+
+			// The old root worker can remain the controller until navigation.
+			// Reload exactly once after removing it.
+			if (
+				navigator.serviceWorker.controller &&
+				sessionStorage.getItem(reloadKey) !== "1"
+			) {
+				sessionStorage.setItem(reloadKey, "1");
+				location.reload();
+				throw new Error("Reloading after removing the old Bunny root service worker.");
+			}
+		}
 	}
 
-	// Older Bunny deployments could leave a partially-created $scramjet
-	// IndexedDB database behind. Scramjet 1.1 expects its complete schema
-	// (config, cookies, redirectTrackers, referrerPolicies, publicSuffixList).
-	await new Promise((resolve) => {
-		try {
-			const request = indexedDB.deleteDatabase("$scramjet");
-			request.onsuccess = resolve;
-			request.onerror = resolve;
-			request.onblocked = () => setTimeout(resolve, 250);
-		} catch {
-			resolve();
-		}
-	});
-
-	sessionStorage.setItem(resetKey, "1");
-	location.reload();
-	throw new Error("Reloading Bunny proxy after clearing stale Scramjet state.");
+	await ensureScramjetDatabase();
 }
+
+async function ensureScramjetDatabase() {
+	const stores = [
+		"config",
+		"cookies",
+		"redirectTrackers",
+		"referrerPolicies",
+		"publicSuffixList",
+	];
+
+	await new Promise((resolve, reject) => {
+		const request = indexedDB.open("$scramjet");
+
+		request.onerror = () => reject(request.error || new Error("Could not open Scramjet IndexedDB."));
+		request.onupgradeneeded = () => {
+			const db = request.result;
+			for (const store of stores) {
+				if (!db.objectStoreNames.contains(store)) db.createObjectStore(store);
+			}
+		};
+
+		request.onsuccess = () => {
+			const db = request.result;
+			const missing = stores.filter((store) => !db.objectStoreNames.contains(store));
+			const currentVersion = db.version;
+			db.close();
+
+			if (!missing.length) {
+				resolve();
+				return;
+			}
+
+			const upgrade = indexedDB.open("$scramjet", currentVersion + 1);
+			upgrade.onerror = () =>
+				reject(upgrade.error || new Error("Could not repair Scramjet IndexedDB."));
+			upgrade.onupgradeneeded = () => {
+				const database = upgrade.result;
+				for (const store of missing) {
+					if (!database.objectStoreNames.contains(store)) {
+						database.createObjectStore(store);
+					}
+				}
+			};
+			upgrade.onsuccess = () => {
+				upgrade.result.close();
+				resolve();
+			};
+		};
+	});
+}
+
 
 function showError(error) {
 	document.body.replaceChildren();
@@ -89,7 +135,7 @@ async function configureTransport() {
 
 async function start() {
 	try {
-		await resetBrokenBunnyRuntime();
+		await prepareBunnyRuntime();
 		await registerScramjetWorker();
 
 		const { ScramjetController } = $scramjetLoadController();
