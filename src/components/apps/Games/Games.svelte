@@ -3,7 +3,7 @@
 
 	const assetBase = import.meta.env.BASE_URL;
 
-	const cloudUrl = 'https://figure-cloud-cine.b-cdn.net/';
+	const cloudUrl = 'https://michaelmb110b12-wq.github.io/Cine-Cloud-SRC/src/';
 	const gnMathUrl = new URL('gnmath/index.html', new URL(assetBase, location.origin)).href;
 
 	function openInSafari(url: string) {
