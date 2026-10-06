@@ -7,7 +7,7 @@
 	const siteBase = location.hostname.endsWith('.github.io')
 		? new URL('/macos-web/', location.origin)
 		: new URL('./', location.origin);
-	const proxyEntry = new URL('proxy/index.html', siteBase).href;
+	const proxyEntry = new URL('scramjet/index.html', siteBase).href;
 	const browserHome = new URL('blueberry_mac_os_banner.html', siteBase).href;
 
 	type Tab = {
