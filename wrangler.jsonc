@@ -4,7 +4,7 @@
 	// Build the Vite SPA before deploying, so ./dist exists when the assets are
 	// uploaded. Runs on `wrangler deploy` (including Cloudflare's CI).
 	"build": {
-		"command": "pnpm build"
+		"command": "npm run build"
 	},
 	// Static-only deployment (no Worker script): the built Vite SPA in ./dist is
 	// served directly from Cloudflare's edge. `single-page-application` serves
