@@ -161,9 +161,9 @@
 
 
 	function handleMessage(event: MessageEvent) {
-		const allowedProxyOrigin =
-			isBunnyCdn ? 'https://michaelmb110b12-wq.github.io' : location.origin;
-		if (event.origin !== location.origin && event.origin !== allowedProxyOrigin) return;
+		// The proxy iframe stays on the GitHub Pages origin even though the
+		// production app assets are delivered from jsDelivr.
+		if (event.origin !== location.origin) return;
 
 		const data = event.data;
 		if (!data?.type) return;
