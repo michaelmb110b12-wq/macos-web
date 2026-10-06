@@ -1,0 +1,58 @@
+name: Build jsDelivr distribution
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jsdelivr-cdn
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build production site
+        run: npm run build
+
+      - name: Publish dist to jsdelivr-cdn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin jsdelivr-cdn
+          git worktree add --detach /tmp/jsdelivr origin/jsdelivr-cdn
+
+          find /tmp/jsdelivr -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
+          cp -a dist/. /tmp/jsdelivr/
+
+          cd /tmp/jsdelivr
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "jsdelivr-cdn is already up to date."
+            exit 0
+          fi
+
+          git commit -m "Build site for jsDelivr"
+          git push origin HEAD:jsdelivr-cdn
