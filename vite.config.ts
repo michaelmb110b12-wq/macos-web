@@ -5,9 +5,12 @@ import { imagetools } from 'vite-imagetools';
 import { VitePWA } from 'vite-plugin-pwa';
 import { prefetch } from './prefetch-plugin';
 
-export default defineConfig({
-	// Use relative asset paths so the same Pages build also works when mirrored by Bunny CDN.
-	base: './',
+export default defineConfig(({ command }) => ({
+	// Keep local development self-contained, but serve production build assets from jsDelivr.
+	base:
+		command === 'build'
+			? 'https://cdn.jsdelivr.net/gh/michaelmb110b12-wq/macos-web@jsdelivr-cdn/'
+			: './',
 	plugins: [
 		svelte(),
 		prefetch(),
