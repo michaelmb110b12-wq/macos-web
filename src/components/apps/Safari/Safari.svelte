@@ -94,6 +94,9 @@
 			}
 		}
 
+		// Explicitly tell the existing proxy iframe to navigate. This avoids
+		// relying on iframe src replacement alone in Svelte.
+		sendToTab('navigate', target);
 	}
 
 	function reload() {
