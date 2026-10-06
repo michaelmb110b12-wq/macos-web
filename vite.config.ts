@@ -37,4 +37,4 @@ export default defineConfig(({ command }) => ({
 		imagetools(),
 	],
 	resolve: { alias: { '🍎': new URL('./src/', import.meta.url).pathname } },
-});
+}));
