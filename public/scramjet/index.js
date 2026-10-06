@@ -40,8 +40,8 @@ async function registerProxyServiceWorker() {
 		throw new Error("Your browser does not support service workers.");
 	}
 
-	const serviceWorkerUrl = new URL("sw.js", SITE_ROOT).href;
-	const serviceWorkerScope = SITE_ROOT.pathname;
+	const serviceWorkerUrl = new URL("scramjet/sw.js", SITE_ROOT).href;
+	const serviceWorkerScope = new URL("scramjet/", SITE_ROOT).pathname;
 
 	const registration = await navigator.serviceWorker.register(serviceWorkerUrl, {
 		scope: serviceWorkerScope,
@@ -52,7 +52,7 @@ async function registerProxyServiceWorker() {
 	await navigator.serviceWorker.ready;
 
 	const currentController = navigator.serviceWorker.controller?.scriptURL || "";
-	if (currentController === serviceWorkerUrl) {
+	if (currentController.startsWith(new URL("scramjet/sw.js", SITE_ROOT).href)) {
 		sessionStorage.removeItem("__scramjet_scope_reload");
 		return true;
 	}
