@@ -160,6 +160,7 @@
 
 		address = target;
 		apps.pending_navigation = null;
+		sendToTab('navigate', target);
 	});
 
 
