@@ -37,12 +37,15 @@
 
 <style>
 	.container {
-		height: 100%;
+		height: 100dvh;
+		min-height: 100dvh;
 		width: 100%;
+		overflow: hidden;
 	}
 
 	main {
-		height: 100%;
+		height: 100dvh;
+		min-height: 100dvh;
 		width: 100%;
 
 		display: grid;
