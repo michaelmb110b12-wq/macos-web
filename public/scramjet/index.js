@@ -71,7 +71,7 @@ const DEFAULT_WISP_URL = "wss://anura.pro/";
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
 
-	if (!configured || /hostless\\.app/i.test(configured)) {
+	if (!configured || /hostless\.app/i.test(configured)) {
 		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 		return DEFAULT_WISP_URL;
 	}
