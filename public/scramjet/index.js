@@ -66,7 +66,7 @@ async function registerProxyServiceWorker() {
 	throw new Error("The Scramjet service worker could not take control of /scramjet/.");
 }
 
-const DEFAULT_WISP_URL = "wss://anura.pro/";
+const DEFAULT_WISP_URL = "wss://wisp.mercurywork.shop/";
 
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
