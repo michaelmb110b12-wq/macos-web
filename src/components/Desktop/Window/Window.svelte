@@ -103,13 +103,15 @@
 			}
 
 			dragging_enabled = false;
-			windowEl.style.setProperty('position', 'absolute', 'important');
-			windowEl.style.setProperty('top', '0', 'important');
+			// Anchor against the viewport, not the old draggable offset. Leave
+			// room for the macOS menu bar above and the Dock below.
+			windowEl.style.setProperty('position', 'fixed', 'important');
+			windowEl.style.setProperty('top', '1.7rem', 'important');
 			windowEl.style.setProperty('right', '0', 'important');
-			windowEl.style.setProperty('bottom', '0', 'important');
+			windowEl.style.setProperty('bottom', '5.25rem', 'important');
 			windowEl.style.setProperty('left', '0', 'important');
-			windowEl.style.setProperty('width', '100%', 'important');
-			windowEl.style.setProperty('height', '100%', 'important');
+			windowEl.style.setProperty('width', 'auto', 'important');
+			windowEl.style.setProperty('height', 'auto', 'important');
 			windowEl.style.setProperty('transform', 'none', 'important');
 			windowEl.style.setProperty('border-radius', '0', 'important');
 			is_maximized = true;
@@ -311,10 +313,10 @@
 		cursor: var(--system-cursor-default), auto;
 
 		&.maximized {
-			top: 0;
-			left: 0;
-			width: 100% !important;
-			height: 100% !important;
+			position: fixed;
+			inset: 1.7rem 0 5.25rem;
+			width: auto !important;
+			height: auto !important;
 			transform: none !important;
 			border-radius: 0;
 		}
