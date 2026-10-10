@@ -88,12 +88,12 @@
 
 		if (!preferences.reduced_motion) {
 			windowEl.style.transition =
-				'height 0.3s ease, width 0.3s ease, transform 0.3s ease, top 0.3s ease, left 0.3s ease';
+				'height 0.3s ease, width 0.3s ease, transform 0.3s ease, inset 0.3s ease';
 		}
 
 		if (shouldMaximize) {
-			// Save the exact inline geometry so restore preserves the window's
-			// previous position and any size chosen by the user.
+			// Save the exact inline geometry first, including the transform used
+			// for dragging and any width/height chosen with the resize handles.
 			previousWindowStyles = {};
 			for (const property of windowStyleProperties) {
 				previousWindowStyles[property] = {
@@ -102,14 +102,18 @@
 				};
 			}
 
+			// Match PuruVJ/macos-preact: maximize to the desktop workspace
+			// (between the menu bar and Dock), not to the old window position.
+			const desktop = document.getElementById('windows-area') ?? windowEl.parentElement;
+			if (!desktop) return;
+			const desktopBounds = desktop.getBoundingClientRect();
+
 			dragging_enabled = false;
-			// Anchor against the viewport, not the old draggable offset. Leave
-			// room for the macOS menu bar above and the Dock below.
 			windowEl.style.setProperty('position', 'fixed', 'important');
-			windowEl.style.setProperty('top', '1.7rem', 'important');
-			windowEl.style.setProperty('right', '0', 'important');
-			windowEl.style.setProperty('bottom', '5.25rem', 'important');
-			windowEl.style.setProperty('left', '0', 'important');
+			windowEl.style.setProperty('top', `${desktopBounds.top}px`, 'important');
+			windowEl.style.setProperty('right', `${Math.max(0, window.innerWidth - desktopBounds.right)}px`, 'important');
+			windowEl.style.setProperty('bottom', `${Math.max(0, window.innerHeight - desktopBounds.bottom)}px`, 'important');
+			windowEl.style.setProperty('left', `${desktopBounds.left}px`, 'important');
 			windowEl.style.setProperty('width', 'auto', 'important');
 			windowEl.style.setProperty('height', 'auto', 'important');
 			windowEl.style.setProperty('transform', 'none', 'important');
@@ -118,6 +122,8 @@
 		} else {
 			dragging_enabled = true;
 
+			// Restore the previous inline position and dimensions rather than
+			// calculating defaults, so manual resizing remains intact.
 			if (previousWindowStyles) {
 				for (const property of windowStyleProperties) {
 					const saved = previousWindowStyles[property];
@@ -313,8 +319,7 @@
 		cursor: var(--system-cursor-default), auto;
 
 		&.maximized {
-			position: fixed;
-			inset: 1.7rem 0 5.25rem;
+			position: fixed !important;
 			width: auto !important;
 			height: auto !important;
 			transform: none !important;
