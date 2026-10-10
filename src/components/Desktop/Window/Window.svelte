@@ -27,6 +27,18 @@
 	let dragging_enabled = $state(true);
 
 	let is_maximized = $state(false);
+	let previousWindowStyles: Record<string, { value: string; priority: string }> | null = null;
+	const windowStyleProperties = [
+		'position',
+		'top',
+		'right',
+		'bottom',
+		'left',
+		'width',
+		'height',
+		'transform',
+		'border-radius',
+	];
 
 	let windowEl = $state<HTMLElement>();
 
@@ -76,12 +88,57 @@
 
 		if (!preferences.reduced_motion) {
 			windowEl.style.transition =
-				'height 0.3s ease, width 0.3s ease, transform 0.3s ease';
+				'height 0.3s ease, width 0.3s ease, transform 0.3s ease, top 0.3s ease, left 0.3s ease';
 		}
 
-		// The maximized CSS class fills the available desktop workspace. Keep
-		// the original inline size and drag transform untouched so restore returns
-		// the window to its exact previous size and position (including resizing).
+		if (shouldMaximize) {
+			// Save the window's exact inline geometry, including its user-resized
+			// size and drag position, before applying a workspace-sized layout.
+			previousWindowStyles = {};
+			for (const property of windowStyleProperties) {
+				previousWindowStyles[property] = {
+					value: windowEl.style.getPropertyValue(property),
+					priority: windowEl.style.getPropertyPriority(property),
+				};
+			}
+
+			dragging_enabled = false;
+			windowEl.style.setProperty('position', 'absolute', 'important');
+			windowEl.style.setProperty('top', '0', 'important');
+			windowEl.style.setProperty('right', '0', 'important');
+			windowEl.style.setProperty('bottom', '0', 'important');
+			windowEl.style.setProperty('left', '0', 'important');
+			windowEl.style.setProperty('width', '100%', 'important');
+			windowEl.style.setProperty('height', '100%', 'important');
+			windowEl.style.setProperty('transform', 'none', 'important');
+			windowEl.style.setProperty('border-radius', '0', 'important');
+			is_maximized = true;
+		} else {
+			dragging_enabled = true;
+
+			// Restore precisely what was saved rather than guessing the default
+			// dimensions, so a manually resized window returns to its old geometry.
+			if (previousWindowStyles) {
+				for (const property of windowStyleProperties) {
+					const saved = previousWindowStyles[property];
+					if (saved?.value) {
+						windowEl.style.setProperty(property, saved.value, saved.priority);
+					} else {
+						windowEl.style.removeProperty(property);
+					}
+				}
+			}
+			previousWindowStyles = null;
+			is_maximized = false;
+		}
+
+		apps.fullscreen[app_id] = shouldMaximize;
+
+		await sleep(300);
+
+		if (!preferences.reduced_motion) windowEl.style.transition = '';
+	}
+e and position (including resizing).
 		dragging_enabled = !shouldMaximize;
 		is_maximized = shouldMaximize;
 		apps.fullscreen[app_id] = shouldMaximize;
