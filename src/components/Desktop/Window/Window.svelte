@@ -27,7 +27,6 @@
 	let dragging_enabled = $state(true);
 
 	let is_maximized = $state(false);
-	let minimized_transform = $state<string>();
 
 	let windowEl = $state<HTMLElement>();
 
@@ -73,29 +72,19 @@
 	async function maximizeApp() {
 		if (!windowEl) return;
 
+		const shouldMaximize = !is_maximized;
+
 		if (!preferences.reduced_motion) {
 			windowEl.style.transition =
 				'height 0.3s ease, width 0.3s ease, transform 0.3s ease';
 		}
 
-		if (!is_maximized) {
-			dragging_enabled = false;
-
-			minimized_transform = windowEl.style.transform || 'none';
-			windowEl.style.transform = 'translate(0px, 0px)';
-
-			windowEl.style.width = '100%';
-			windowEl.style.height = 'calc(100vh - 1.7rem)';
-		} else {
-			dragging_enabled = true;
-			windowEl.style.transform = minimized_transform || 'none';
-
-			windowEl.style.width = `${+width / remModifier}rem`;
-			windowEl.style.height = `${+height / remModifier}rem`;
-		}
-
-		is_maximized = !is_maximized;
-		apps.fullscreen[app_id] = is_maximized;
+		// The maximized CSS class fills the available desktop workspace. Keep
+		// the original inline size and drag transform untouched so restore returns
+		// the window to its exact previous size and position (including resizing).
+		dragging_enabled = !shouldMaximize;
+		is_maximized = shouldMaximize;
+		apps.fullscreen[app_id] = shouldMaximize;
 
 		await sleep(300);
 
@@ -274,6 +263,15 @@
 		box-shadow: var(--elevated-shadow);
 
 		cursor: var(--system-cursor-default), auto;
+
+		&.maximized {
+			top: 0;
+			left: 0;
+			width: 100% !important;
+			height: 100% !important;
+			transform: none !important;
+			border-radius: 0;
+		}
 
 		&.active {
 			/* // --elevated-shadow: 0px 6.7px 12px rgba(0, 0, 0, 0.218), 0px 22.3px 40.2px rgba(0, 0, 0, 0.322),
