@@ -92,8 +92,8 @@
 		}
 
 		if (shouldMaximize) {
-			// Save the window's exact inline geometry, including its user-resized
-			// size and drag position, before applying a workspace-sized layout.
+			// Save the exact inline geometry so restore preserves the window's
+			// previous position and any size chosen by the user.
 			previousWindowStyles = {};
 			for (const property of windowStyleProperties) {
 				previousWindowStyles[property] = {
@@ -116,8 +116,6 @@
 		} else {
 			dragging_enabled = true;
 
-			// Restore precisely what was saved rather than guessing the default
-			// dimensions, so a manually resized window returns to its old geometry.
 			if (previousWindowStyles) {
 				for (const property of windowStyleProperties) {
 					const saved = previousWindowStyles[property];
@@ -132,15 +130,6 @@
 			is_maximized = false;
 		}
 
-		apps.fullscreen[app_id] = shouldMaximize;
-
-		await sleep(300);
-
-		if (!preferences.reduced_motion) windowEl.style.transition = '';
-	}
-e and position (including resizing).
-		dragging_enabled = !shouldMaximize;
-		is_maximized = shouldMaximize;
 		apps.fullscreen[app_id] = shouldMaximize;
 
 		await sleep(300);
