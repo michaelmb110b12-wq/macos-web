@@ -78,11 +78,11 @@ async function registerProxyServiceWorker() {
 
 	return true;
 }
-const DEFAULT_WISP_URL = "wss://anura.pro/";
+const DEFAULT_WISP_URL = "wss://scramjet-blueberry-pop-c.hostless.app/wisp/";
 
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
-	if (!configured || /hostless\\.app/i.test(configured)) {
+	if (!configured || /hostless\.app/i.test(configured)) {
 		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
 		return DEFAULT_WISP_URL;
 	}
