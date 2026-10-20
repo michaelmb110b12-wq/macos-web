@@ -3,8 +3,8 @@
 
 	const assetBase = import.meta.env.BASE_URL;
 
-	const cloudUrl = 'https://figure-cloud-cine.b-cdn.net/';
-	const gnMathUrl = new URL('gnmath/index.html', new URL(assetBase, location.origin)).href;
+	const cloudUrl = 'https://michaelmb110b12-wq.github.io/NEW-FIG-CLOUD-BLUEBERRY/';
+	const gnMathUrl = 'https://michaelmb110b12-wq.github.io/macos-web/gnmath/index.html';
 
 	function openInSafari(url: string) {
 		apps.pending_navigation = new URL(url, location.origin).href;
