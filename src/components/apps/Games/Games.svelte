@@ -5,6 +5,7 @@
 
 	const cloudUrl = 'https://michaelmb110b12-wq.github.io/NEW-FIG-CLOUD-BLUEBERRY/';
 	const gnMathUrl = 'https://michaelmb110b12-wq.github.io/macos-web/gnmath/index.html';
+	const optiumUrl = 'https://michaelmb110b12-wq.github.io/macos-web/optium/file.html';
 
 	function openInSafari(url: string) {
 		apps.pending_navigation = new URL(url, location.origin).href;
@@ -20,6 +21,10 @@
 		<button class="game-button" onclick={() => openInSafari(gnMathUrl)}>
 			<img class="game-icon" src={assetBase + 'app-icons/gnmath.svg'} alt="GN Math" />
 			<span>Open GN Math</span>
+		</button>
+		<button class="game-button" onclick={() => openInSafari(optiumUrl)}>
+			<img class="game-icon" src={assetBase + 'app-icons/optium.svg'} alt="Optium" />
+			<span>Open Optium</span>
 		</button>
 	</div>
 </section>
