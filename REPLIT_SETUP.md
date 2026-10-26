@@ -1,22 +1,32 @@
-# macOS Web — Replit version
+# macOS Web — Replit static deployment
 
-This branch adds Replit run/deployment configuration for the macOS Web Svelte app. It does not change the `main` branch.
+This branch configures the frontend for Replit Static Deployment and uses Anura's public Wisp endpoint instead of the custom Hostless proxy endpoint. The `main` branch is unchanged.
 
-## Run on Replit
+## Import into Replit
 
-1. Push this branch to GitHub (already available as `replit-version`).
-2. In Replit, choose **Create Repl / Import from GitHub** and import:
-   `https://github.com/michaelmb110b12-wq/macos-web/tree/replit-version`
-   If Replit asks for a repository rather than a branch URL, import the repository and switch the workspace to the `replit-version` branch.
-3. Let Replit install the Node.js dependencies.
-4. Press **Run**. The configured command builds the Vite/Svelte frontend, then starts the Fastify server:
-   `npm run build && npm start`
-5. Open the web preview. The server binds to `0.0.0.0` and uses Replit's `PORT` environment variable.
+1. Open [Replit](https://replit.com/) and choose the option to import a project from GitHub.
+2. Import `https://github.com/michaelmb110b12-wq/macos-web`.
+3. Switch the workspace to the `replit-version` branch.
+4. Allow Replit to install the dependencies.
+5. Press **Run** to launch Vite's development preview.
 
-## Notes
+## Deploy as a static site
 
-- Node.js 22 is configured because this project requires modern Node.js (package.json specifies Node >=20).
-- The Fastify server serves the production build and provides the same-origin `/wisp/` WebSocket endpoint for the proxy.
-- The proxy's remote destinations and third-party services still need to be reachable from Replit. Some sites/services may block proxy traffic.
-- This branch's app links that explicitly point to GitHub Pages (for example, Optium) still point to those URLs. They are not automatically hosted inside Replit.
-- For a deployment, use Replit's Deploy flow; the deployment command is configured to build and start the app.
+1. Open **Deployments** in Replit.
+2. Select **Static**.
+3. Confirm the build command is `npm run build`.
+4. Set the public directory to `dist`.
+5. Publish/Deploy and wait for Replit to finish.
+
+The `.replit` file already contains the static deployment settings and an SPA fallback to `/index.html`. The site is a Vite/Svelte frontend, so deployment serves the built files; it does not start `server.js` or `wisp-server.js`.
+
+## Proxy notes
+
+- The browser proxy defaults to Anura at `wss://anura.pro/`, rather than the custom Hostless Wisp URL.
+- Static hosting does not run a custom WebSocket server. The proxy therefore depends on Anura's public endpoint being reachable and compatible with this app's Epoxy/libcurl transport. This external endpoint is configured but has not been tested from a deployed Replit site.
+- The site still includes static Scramjet/BareMux assets in the Vite build. If Anura's endpoint, service-worker scope, or cross-origin policy is incompatible, the proxy may need additional changes.
+- The Games app's Optium link remains the GitHub Pages URL currently configured in the app.
+
+## Important
+
+A static deployment can host the frontend only. It cannot run the app's Node/Fastify backend, host a private Wisp endpoint, or provide arbitrary WebSocket server code. To run your own Wisp server, use a server-capable deployment instead.
