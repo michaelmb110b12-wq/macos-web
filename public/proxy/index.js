@@ -78,7 +78,7 @@ async function registerProxyServiceWorker() {
 
 	return true;
 }
-const DEFAULT_WISP_URL = "wss://scramjet-blueberry-pop-c.hostless.app/wisp/";
+const DEFAULT_WISP_URL = "wss://anura.pro/";
 
 function getWispUrl() {
 	const configured = (localStorage.getItem("wispUrl") || "").trim();
