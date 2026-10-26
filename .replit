@@ -1,6 +1,11 @@
 modules = ["nodejs-22"]
-run = "npm run build && npm start"
+run = "npm run dev -- --host 0.0.0.0"
 
 [deployment]
-run = ["sh", "-c", "npm run build && npm start"]
-deploymentTarget = "cloudrun"
+build = "npm run build"
+deploymentTarget = "static"
+publicDir = "dist"
+
+[[deployment.routing]]
+path = "/*"
+file = "/index.html"
