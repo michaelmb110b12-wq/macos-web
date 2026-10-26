@@ -81,12 +81,10 @@ async function registerProxyServiceWorker() {
 const DEFAULT_WISP_URL = "wss://anura.pro/";
 
 function getWispUrl() {
-	const configured = (localStorage.getItem("wispUrl") || "").trim();
-	if (!configured || /hostless\.app/i.test(configured)) {
-		localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
-		return DEFAULT_WISP_URL;
-	}
-	return configured;
+	// Always use Anura for the browser proxy, replacing any previously saved
+	// custom endpoint so an old setting cannot silently switch transports.
+	localStorage.setItem("wispUrl", DEFAULT_WISP_URL);
+	return DEFAULT_WISP_URL;
 }
 
 async function configureTransport() {
